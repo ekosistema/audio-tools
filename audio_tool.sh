@@ -44,7 +44,9 @@ find . -type f \( -name "*.mp3" -o -name "*.wav" -o -name "*.ogg" -o -name "*.fl
 while IFS= read -r -d '' file; do
     duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
     
-    if (( $(echo "$duration < $max_duration" | bc -l) )); then
+    duration_int=$(printf "%.0f" "$duration")
+    
+    if [ "$duration_int" -lt "$max_duration" ]; then
         echo "Removing $file (duration: $duration seconds)"
         rm "$file"
     fi
