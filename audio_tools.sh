@@ -1,11 +1,166 @@
 #!/bin/bash
 
-# Function to get folder path with current folder as default
+# Función para ejecutar script de Python con heredoc
+run_python_script() {
+    python3 - "$@" << END
+$1
+END
+}
+
+# Función para obtener la ruta de la carpeta
 get_folder_path() {
     local prompt="$1"
     local default_path="$(pwd)"
     read -p "${prompt} (press Enter for current folder [$default_path]): " user_input
     echo "${user_input:-$default_path}"
+}
+
+# Función para el audio shuffler
+audio_shuffler() {
+    run_python_script "
+import os
+import random
+import subprocess
+from pydub import AudioSegment
+from tqdm import tqdm
+
+def get_user_input():
+    input_folder = input('Please enter the input folder path: ')
+    min_duration = int(input('Please enter the minimum duration in seconds: '))
+    max_duration = input('Please enter the maximum duration to trim (optional): ')
+    max_duration = int(max_duration) if max_duration else None
+    num_chunks = input('Please enter the number of chunks to split (default: 8): ')
+    num_chunks = int(num_chunks) if num_chunks else 8
+    
+    return {
+        'input_folder': input_folder,
+        'min_duration': min_duration,
+        'max_duration': max_duration,
+        'num_chunks': num_chunks
+    }
+
+def process_audio_files(args):
+    input_folder = args['input_folder']
+    min_duration = args['min_duration']
+    max_duration = args['max_duration']
+    num_chunks = args['num_chunks']
+
+    temp_folder = os.path.join(input_folder, '.temp')
+    output_folder = os.path.join(input_folder, 'shuffled')
+    
+    os.makedirs(temp_folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
+
+    audio_files = [f for f in os.listdir(input_folder) if f.endswith(('.mp3', '.wav', '.ogg', '.flac'))]
+    total_files = len(audio_files)
+    
+    print(f'Starting to process {total_files} files...')
+
+    for index, file in enumerate(tqdm(audio_files, desc='Processing Files')):
+        print(f'Processing file {index + 1}/{total_files}: {file}')
+        
+        input_path = os.path.join(input_folder, file)
+        output_path = os.path.join(output_folder, f'shuffled_{file}')
+        
+        # Check file duration
+        duration = get_audio_duration(input_path)
+        
+        if duration < min_duration:
+            print(f'Skipping {file} (duration: {duration}s < minimum: {min_duration}s)')
+            continue
+        
+        # Process the audio file
+        audio = AudioSegment.from_file(input_path)
+        
+        if max_duration and duration > max_duration:
+            audio = audio[:max_duration * 1000]  # Trim to max duration
+        
+        chunk_duration = int(len(audio) / num_chunks)  # Duration in milliseconds
+        chunks = [audio[i*chunk_duration:(i+1)*chunk_duration] for i in range(num_chunks)]
+        
+        # Apply fade out to chunks
+        fade_duration = len(audio) / 20  # 1/20 of the trimmed file duration
+        chunks = [chunk.fade_out(duration=int(fade_duration)) for chunk in chunks]
+        
+        # Save chunks to temp folder
+        chunk_files = []
+        for i, chunk in enumerate(chunks):
+            chunk_path = os.path.join(temp_folder, f'chunk_{i}_{file}')
+            chunk.export(chunk_path, format=file.split('.')[-1])
+            chunk_files.append(chunk_path)
+        
+        # Shuffle and concatenate chunks
+        random.shuffle(chunk_files)
+        shuffled_audio = AudioSegment.empty()
+        for chunk_file in chunk_files:
+            shuffled_audio += AudioSegment.from_file(chunk_file)
+        
+        # Apply fade in and fade out
+        shuffled_audio = shuffled_audio.fade_in(50).fade_out(50)
+        
+        # Export the final audio
+        shuffled_audio.export(output_path, format=file.split('.')[-1])
+        
+        # Clean up temp files
+        for chunk_file in chunk_files:
+            os.remove(chunk_file)
+        
+        print(f'Finished processing {file}')
+    
+    # Remove temp folder
+    os.rmdir(temp_folder)
+    
+    print('All files processed successfully!')
+
+def get_audio_duration(file_path):
+    result = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', file_path], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    return float(result.stdout)
+
+if __name__ == '__main__':
+    args = get_user_input()
+    process_audio_files(args)
+"
+}
+
+# Función para el auto fader
+auto_fader() {
+    run_python_script "
+import os
+import sys
+from pydub import AudioSegment
+from tqdm import tqdm
+
+def process_audio(file_path, max_duration, fade_duration, temp_folder, output_folder):
+    # ... (rest of the auto_fader.py code) ...
+
+def main():
+    # ... (rest of the auto_fader.py code) ...
+
+if __name__ == '__main__':
+    main()
+"
+}
+
+# Función para el auto looper
+auto_looper() {
+    run_python_script "
+import os
+import subprocess
+import shutil
+from tqdm import tqdm
+
+def get_audio_duration(file_path):
+    # ... (rest of the auto_looper.py code) ...
+
+def process_audio(input_folder, min_duration, max_duration, iterations, fade_duration):
+    # ... (rest of the auto_looper.py code) ...
+
+def main():
+    # ... (rest of the auto_looper.py code) ...
+
+if __name__ == '__main__':
+    main()
+"
 }
 
 # Function to convert files to MP3
@@ -211,7 +366,10 @@ Select an option:
 4. Clean filenames
 5. Remove long audio files
 6. Search and process audio files
-7. Exit
+7. Audio Shuffler
+8. Auto Fader
+9. Auto Looper
+10. Exit
 "
         read -p "Enter the number of the desired option: " choice
 
@@ -222,7 +380,10 @@ Select an option:
             4) clean_filenames ;;
             5) remove_long_audios ;;
             6) search_and_process_audios ;;
-            7) echo "Exiting the program."; exit 0 ;;
+            7) audio_shuffler ;;
+            8) auto_fader ;;
+            9) auto_looper ;;
+            10) echo "Exiting the program."; exit 0 ;;
             *) echo "Invalid option. Please try again." ;;
         esac
 

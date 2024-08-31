@@ -21,9 +21,27 @@ The Audio Tools script is a comprehensive audio processing tool that combines mu
 
 There are two ways to install the Audio Tools script:
 
-### Method 1: Manual Installation
+### Method 1: One-Line Installation from GitHub
 
-1. Save the script to a file named `audio_tools.sh`.
+You can install the Audio Tools script directly from GitHub using the following command:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/yourusername/audio-tools/main/install.sh)"
+```
+
+Replace `yourusername` with the actual GitHub username where the repository is hosted.
+
+This method will:
+- Install necessary dependencies (ffmpeg and sed)
+- Download the audio_tools script
+- Set up the script in your system
+- Add the script's location to your PATH
+
+### Method 2: Manual Installation
+
+If you prefer to install the script manually:
+
+1. Clone the repository or download the `audio_tools.sh` script.
 2. Move the script to a directory in your PATH, for example:
    ```
    mv audio_tools.sh ~/bin/audio_tools
@@ -41,24 +59,13 @@ There are two ways to install the Audio Tools script:
    source ~/.bashrc  # or source ~/.zshrc if you use Zsh
    ```
 
-### Method 2: Automated Installation
-
-1. Save the installation script provided earlier as `install_audio_tools.sh` in the same directory as your `audio_tools.sh`.
-2. Give the installation script execution permissions:
-   ```
-   chmod +x install_audio_tools.sh
-   ```
-3. Run the installation script:
-   ```
-   ./install_audio_tools.sh
-   ```
-4. After the installation, restart your terminal or run `source ~/.bashrc` (for Bash) or `source ~/.zshrc` (for Zsh) to apply the changes.
-
 ### Dependencies
 
-Ensure you have the following dependencies installed:
+The installation script will attempt to install the following dependencies if they're not already present:
 - `ffmpeg`: For audio conversion and duration checking
 - `sed`: For filename cleaning (usually pre-installed on most Unix-like systems)
+
+If the automatic installation fails, you may need to install these manually using your system's package manager.
 
 ## Usage
 
@@ -122,10 +129,10 @@ This function searches for audio files containing a specific string in their fil
 
 ## Troubleshooting
 
-- If you encounter a "command not found" error, make sure the script is in a directory included in your PATH.
-- If ffmpeg is not installed, you may need to install it using your system's package manager.
+- If you encounter a "command not found" error after installation, try restarting your terminal or running `source ~/.bashrc` (for Bash) or `source ~/.zshrc` (for Zsh).
+- If the automatic dependency installation fails, you may need to install ffmpeg manually using your system's package manager.
 - Make sure you have write permissions in the folders you're working with.
 - If you're having issues with file paths, try using absolute paths instead of relative paths.
-- If changes to your PATH are not taking effect, try restarting your terminal or running `source ~/.bashrc` or `source ~/.zshrc`.
+- If changes to your PATH are not taking effect, try logging out and back in to your system.
 
-For any other issues or questions, please contact the script maintainer.
+For any other issues or questions, please open an issue on the GitHub repository or contact the script maintainer.
