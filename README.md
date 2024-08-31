@@ -10,11 +10,12 @@
    3. [Scan and copy audio files from subfolders](#scan-and-copy-audio-files-from-subfolders)
    4. [Clean filenames](#clean-filenames)
    5. [Remove long audio files](#remove-long-audio-files)
+   6. [Search and process audio files](#search-and-process-audio-files)
 5. [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
-The Audio Tools script is a comprehensive audio processing tool that combines multiple functionalities for managing audio files. It allows you to convert audio files to MP3, remove short or long audio files, scan and copy audio files from subfolders, and clean filenames.
+The Audio Tools script is a comprehensive audio processing tool that combines multiple functionalities for managing audio files. It allows you to convert audio files to MP3, remove short or long audio files, scan and copy audio files from subfolders, clean filenames, and search and process audio files based on their names.
 
 ## Installation
 
@@ -67,7 +68,7 @@ After installation, you can run the script from anywhere by typing:
 audio_tools
 ```
 
-The script will display a menu with options. Enter the number corresponding to the desired function and follow the prompts.
+The script will display a menu with options. Enter the number corresponding to the desired function and follow the prompts. By default, all functions will use the current directory as the working directory, but you can specify a different directory if needed.
 
 ## Functions
 
@@ -75,7 +76,7 @@ The script will display a menu with options. Enter the number corresponding to t
 
 This function converts WAV, OGG, and FLAC files to MP3 format.
 
-- You will be asked to provide the path to the folder containing the audio files.
+- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
 - The script will create a new folder named `converted_mp3` in the specified directory.
 - All converted files will be saved in the `converted_mp3` folder.
 
@@ -83,7 +84,7 @@ This function converts WAV, OGG, and FLAC files to MP3 format.
 
 This function removes audio files shorter than a specified duration.
 
-- You will be asked to provide the path to the folder containing the audio files.
+- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
 - You will need to specify the maximum duration (in seconds) for files to be deleted.
 - The script will remove all audio files shorter than the specified duration.
 
@@ -91,7 +92,7 @@ This function removes audio files shorter than a specified duration.
 
 This function scans the specified folder and its subfolders for audio files and copies them to a single folder.
 
-- You will be asked to provide the path to the folder to scan.
+- You will be asked to provide the path to the folder to scan (press Enter to use the current directory).
 - The script will create a new folder named `ALL_AUDIOS` in the specified directory.
 - All found audio files will be copied to the `ALL_AUDIOS` folder.
 
@@ -99,16 +100,25 @@ This function scans the specified folder and its subfolders for audio files and 
 
 This function removes non-standard characters from filenames and replaces spaces with underscores.
 
-- You will be asked to provide the path to the folder containing the files to be renamed.
+- You will be asked to provide the path to the folder containing the files to be renamed (press Enter to use the current directory).
 - The script will rename all files in the specified folder, removing non-standard characters and replacing spaces with underscores.
 
 ### Remove long audio files
 
 This function removes audio files longer than a specified duration.
 
-- You will be asked to provide the path to the folder containing the audio files.
+- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
 - You will need to specify the maximum duration (in seconds) for files to keep.
 - The script will remove all audio files longer than the specified duration.
+
+### Search and process audio files
+
+This function searches for audio files containing a specific string in their filename and allows you to delete or extract them.
+
+- You will be asked to provide the path to the folder to search (press Enter to use the current directory).
+- You will need to enter a text string to search for in the filenames.
+- The script will display all found files and their count.
+- You can choose to delete the found files or extract them to a new folder.
 
 ## Troubleshooting
 
