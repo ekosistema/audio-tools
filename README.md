@@ -1,17 +1,22 @@
 # Audio Tools Script Manual
 
 ## Table of Contents
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Functions](#functions)
-   1. [Convert files to MP3](#convert-files-to-mp3)
-   2. [Remove short audio files](#remove-short-audio-files)
-   3. [Scan and copy audio files from subfolders](#scan-and-copy-audio-files-from-subfolders)
-   4. [Clean filenames](#clean-filenames)
-   5. [Remove long audio files](#remove-long-audio-files)
-   6. [Search and process audio files](#search-and-process-audio-files)
-5. [Troubleshooting](#troubleshooting)
+- [Audio Tools Script Manual](#audio-tools-script-manual)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [Installation](#installation)
+    - [Method 1: One-Line Installation from GitHub](#method-1-one-line-installation-from-github)
+    - [Method 2: Manual Installation](#method-2-manual-installation)
+    - [Dependencies](#dependencies)
+  - [Usage](#usage)
+  - [Functions](#functions)
+    - [Convert files to MP3](#convert-files-to-mp3)
+    - [Remove short audio files](#remove-short-audio-files)
+    - [Scan and copy audio files from subfolders](#scan-and-copy-audio-files-from-subfolders)
+    - [Clean filenames](#clean-filenames)
+    - [Remove long audio files](#remove-long-audio-files)
+    - [Search and process audio files](#search-and-process-audio-files)
+  - [Troubleshooting](#troubleshooting)
 
 ## Introduction
 
@@ -26,10 +31,8 @@ There are two ways to install the Audio Tools script:
 You can install the Audio Tools script directly from GitHub using the following command:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/yourusername/audio-tools/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ekosistema/audio-tools/main/install.sh)"
 ```
-
-Replace `yourusername` with the actual GitHub username where the repository is hosted.
 
 This method will:
 - Install necessary dependencies (ffmpeg and sed)
