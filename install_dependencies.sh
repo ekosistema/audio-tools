@@ -16,11 +16,11 @@ else
     # Check the package manager and install ffmpeg
     if command_exists apt-get; then
         sudo apt-get update
-        sudo apt-get install -y ffmpeg
+        sudo apt-get install -y ffmpeg sed
     elif command_exists yum; then
-        sudo yum install -y ffmpeg
+        sudo yum install -y ffmpeg sed
     elif command_exists brew; then
-        brew install ffmpeg
+        brew install ffmpeg sed
     else
         echo "Unable to install FFmpeg. Please install it manually."
         exit 1
