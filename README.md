@@ -6,7 +6,7 @@ This manual provides instructions for a set of Bash scripts designed to process 
 
 1. **audio_tool.sh**: A comprehensive script that combines multiple audio processing functions (clean filenames, remove short audios and mp3 conversion).
 2. **clean_filenames.sh**: Cleans and standardizes filenames in a specified directory.
-3. **scan_audios_subfolders**: Scans for audio files in subfolders and copies them to a central location.
+3. **scan_audios_subfolders.sh**: Scans for audio files in subfolders and copies them to a central location.
 4. **remove_short_audios.sh**: Removes audio files shorter than a specified duration.
 5. **mp3_conversion.sh**: Converts audio files to MP3 format.
 
@@ -37,16 +37,16 @@ Usage:
 
 Enter the directory path when prompted.
 
-### 3. _
+### 3. scan_audios_subfolders.sh
 
 This_script scans for audio files in subfolders and copies them to a central location.
 
 Usage:
 ```bash
-./_
+./scan_audios_subfolders.sh
 ```
 
-_rovide the path to the folder you want to scan when prompted.
+Provide the path to the folder you want to scan when prompted.
 
 ### 4. remove_short_audios.sh
 
