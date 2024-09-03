@@ -178,21 +178,22 @@ search_and_process_audios() {
         read -p "What do you want to do? (d)elete or (e)xtract: " action
         case $action in
             [Dd]* ) 
-                echo "Deleting files..."
+                echo "Moving files to trash..."
                 echo "$found_files" | while read -r file; do
-                    rm -v "$file"
+                    gio trash "$file"
+                    echo "Moved to trash: $file"
                 done
-                echo "Files deleted."
+                echo "Files moved to trash."
                 break
                 ;;
             [Ee]* )
                 destination_folder="${initial_folder}/${search_string}"
                 mkdir -p "$destination_folder"
-                echo "Extracting files to $destination_folder..."
+                echo "Copying files to $destination_folder..."
                 echo "$found_files" | while read -r file; do
-                    mv -v "$file" "$destination_folder/"
+                    cp -v "$file" "$destination_folder/"
                 done
-                echo "Files extracted to $destination_folder"
+                echo "Files copied to $destination_folder"
                 break
                 ;;
             * ) echo "Please answer d for delete or e for extract.";;
