@@ -1,11 +1,53 @@
 #!/bin/bash
 
-# Function to obtain folder
+# Function to get folder path from user
 get_folder_path() {
     local prompt="$1"
     local default_path="$(pwd)"
     read -p "${prompt} (press Enter for current folder [$default_path]): " user_input
     echo "${user_input:-$default_path}"
+}
+
+# Function to move a file to trash or to_delete folder
+move_to_trash() {
+    local file="$1"
+    local root_folder="$2"
+    local to_delete_folder="${root_folder}/to_delete"
+    
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        if mv "$file" ~/.Trash/; then
+            return 0
+        fi
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        if command -v gio &> /dev/null; then
+            # Linux with gio (GNOME)
+            if gio trash "$file"; then
+                return 0
+            fi
+        elif command -v trash-put &> /dev/null; then
+            # Linux with trash-cli
+            if trash-put "$file"; then
+                return 0
+            fi
+        else
+            # Fallback: create a .Trash folder in user's home if it doesn't exist
+            mkdir -p ~/.Trash
+            if mv "$file" ~/.Trash/; then
+                return 0
+            fi
+        fi
+    fi
+
+    # If all above methods fail, move to to_delete folder
+    mkdir -p "$to_delete_folder"
+    if mv "$file" "$to_delete_folder/"; then
+        echo "Failed to move to trash. File moved to $to_delete_folder instead."
+        return 2
+    else
+        echo "Failed to move file to trash or $to_delete_folder. File remains in its original location."
+        return 1
+    fi
 }
 
 # Function to convert files to MP3
@@ -45,20 +87,37 @@ remove_short_audios() {
         return
     fi
 
-    cd "$audio_folder" || return
+    echo "WARNING: You are about to delete short audio files. This action is potentially destructive."
+    read -p "Are you sure you want to proceed? (yes/no): " confirm
+    if [[ $confirm != "yes" ]]; then
+        echo "Operation cancelled. No files were deleted."
+        return
+    fi
 
-    find . -type f \( -name "*.mp3" -o -name "*.wav" -o -name "*.ogg" -o -name "*.flac" \) -print0 | 
+    trash_count=0
+    to_delete_count=0
+    fail_count=0
+
+    find "$audio_folder" -type f \( -name "*.mp3" -o -name "*.wav" -o -name "*.ogg" -o -name "*.flac" \) -print0 | 
     while IFS= read -r -d '' file; do
         duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
         duration=${duration%.*}
         
         if [ "$duration" -lt "$max_duration" ]; then
-            echo "Deleting $file (duration: $duration seconds)"
-            rm "$file"
+            echo "Processing: $file (duration: $duration seconds)"
+            result=$(move_to_trash "$file" "$audio_folder")
+            case $? in
+                0) ((trash_count++));;
+                2) ((to_delete_count++));;
+                1) ((fail_count++));;
+            esac
         fi
     done
 
-    echo "Process completed. Audio files shorter than $max_duration seconds have been deleted from the folder $audio_folder."
+    echo "Operation completed."
+    echo "$trash_count files moved to trash."
+    [ $to_delete_count -gt 0 ] && echo "$to_delete_count files moved to ${audio_folder}/to_delete folder."
+    [ $fail_count -gt 0 ] && echo "$fail_count files could not be moved."
 }
 
 # Function to scan and copy audio files from subfolders
@@ -134,20 +193,37 @@ remove_long_audios() {
         return
     fi
 
-    cd "$audio_folder" || return
+    echo "WARNING: You are about to delete long audio files. This action is potentially destructive."
+    read -p "Are you sure you want to proceed? (yes/no): " confirm
+    if [[ $confirm != "yes" ]]; then
+        echo "Operation cancelled. No files were deleted."
+        return
+    fi
 
-    find . -type f \( -name "*.mp3" -o -name "*.wav" -o -name "*.ogg" -o -name "*.flac" \) -print0 | 
+    trash_count=0
+    to_delete_count=0
+    fail_count=0
+
+    find "$audio_folder" -type f \( -name "*.mp3" -o -name "*.wav" -o -name "*.ogg" -o -name "*.flac" \) -print0 | 
     while IFS= read -r -d '' file; do
         duration=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$file")
         duration=${duration%.*}
         
         if [ "$duration" -gt "$max_duration" ]; then
-            echo "Deleting $file (duration: $duration seconds)"
-            rm "$file"
+            echo "Processing: $file (duration: $duration seconds)"
+            result=$(move_to_trash "$file" "$audio_folder")
+            case $? in
+                0) ((trash_count++));;
+                2) ((to_delete_count++));;
+                1) ((fail_count++));;
+            esac
         fi
     done
 
-    echo "Process completed. Audio files longer than $max_duration seconds have been deleted from the folder $audio_folder."
+    echo "Operation completed."
+    echo "$trash_count files moved to trash."
+    [ $to_delete_count -gt 0 ] && echo "$to_delete_count files moved to ${audio_folder}/to_delete folder."
+    [ $fail_count -gt 0 ] && echo "$fail_count files could not be moved."
 }
 
 # Function to search and process audio files
@@ -171,29 +247,44 @@ search_and_process_audios() {
     fi
 
     file_count=$(echo "$found_files" | wc -l)
-    echo "$file_count files found:"
-    echo "$found_files"
+    echo "$file_count files found."
 
     while true; do
         read -p "What do you want to do? (d)elete or (e)xtract: " action
         case $action in
             [Dd]* ) 
-                echo "Moving files to trash..."
-                echo "$found_files" | while read -r file; do
-                    gio trash "$file"
-                    echo "Moved to trash: $file"
-                done
-                echo "Files moved to trash."
+                echo "WARNING: You are about to move $file_count files to the trash. This action is potentially destructive."
+                read -p "Are you sure you want to proceed? (yes/no): " confirm
+                if [[ $confirm == "yes" ]]; then
+                    echo "Moving files to trash..."
+                    trash_count=0
+                    to_delete_count=0
+                    fail_count=0
+                    echo "$found_files" | while read -r file; do
+                        result=$(move_to_trash "$file" "$initial_folder")
+                        case $? in
+                            0) ((trash_count++));;
+                            2) ((to_delete_count++));;
+                            1) ((fail_count++));;
+                        esac
+                    done
+                    echo "Operation completed."
+                    echo "$trash_count files moved to trash."
+                    [ $to_delete_count -gt 0 ] && echo "$to_delete_count files moved to ${initial_folder}/to_delete folder."
+                    [ $fail_count -gt 0 ] && echo "$fail_count files could not be moved."
+                else
+                    echo "Operation cancelled. No files were moved."
+                fi
                 break
                 ;;
             [Ee]* )
                 destination_folder="${initial_folder}/${search_string}"
                 mkdir -p "$destination_folder"
-                echo "Copying files to $destination_folder..."
+                echo "Copying $file_count files to $destination_folder..."
                 echo "$found_files" | while read -r file; do
                     cp -v "$file" "$destination_folder/"
                 done
-                echo "Files copied to $destination_folder"
+                echo "Operation completed. $file_count files copied to $destination_folder"
                 break
                 ;;
             * ) echo "Please answer d for delete or e for extract.";;

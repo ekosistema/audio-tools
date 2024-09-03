@@ -127,8 +127,15 @@ This function searches for audio files containing a specific string in their fil
 
 - You will be asked to provide the path to the folder to search (press Enter to use the current directory).
 - You will need to enter a text string to search for in the filenames.
-- The script will display all found files and their count.
-- You can choose to delete the found files or extract them to a new folder.
+- The script will display the number of files found.
+- You can choose to delete the found files or extract (copy) them to a new folder.
+- If you choose to delete:
+  - You will be asked for confirmation before proceeding.
+  - The script will attempt to move files to the system trash.
+  - If moving to trash fails, files will be moved to a "to_delete" folder within the search directory.
+  - You will be informed of how many files were moved to trash, moved to the "to_delete" folder, or couldn't be moved.
+- If you choose to extract:
+  - Files will be copied to a new folder named after your search string within the search directory.
 
 ## Troubleshooting
 
@@ -137,5 +144,7 @@ This function searches for audio files containing a specific string in their fil
 - Make sure you have write permissions in the folders you're working with.
 - If you're having issues with file paths, try using absolute paths instead of relative paths.
 - If changes to your PATH are not taking effect, try logging out and back in to your system.
+- If files can't be moved to the system trash, check if you have the necessary permissions and if your system's trash functionality is working correctly.
+- If a "to_delete" folder is created, review its contents before manually deleting them, as these are files that couldn't be moved to the system trash.
 
 For any other issues or questions, please open an issue on the GitHub repository or contact the script maintainer.
