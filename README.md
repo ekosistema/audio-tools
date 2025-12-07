@@ -1,150 +1,115 @@
-# Audio Tools Script Manual
+# 🎛️ Audio Tools
+> **A Bash Suite for Audio Management**
 
-## Table of Contents
-- [Audio Tools Script Manual](#audio-tools-script-manual)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Installation](#installation)
-    - [Method 1: One-Line Installation from GitHub](#method-1-one-line-installation-from-github)
-    - [Method 2: Manual Installation](#method-2-manual-installation)
-    - [Dependencies](#dependencies)
-  - [Usage](#usage)
-  - [Functions](#functions)
-    - [Convert files to MP3](#convert-files-to-mp3)
-    - [Remove short audio files](#remove-short-audio-files)
-    - [Scan and copy audio files from subfolders](#scan-and-copy-audio-files-from-subfolders)
-    - [Clean filenames](#clean-filenames)
-    - [Remove long audio files](#remove-long-audio-files)
-    - [Search and process audio files](#search-and-process-audio-files)
-  - [Troubleshooting](#troubleshooting)
+**Audio Tools** is a comprehensive suite of Bash scripts designed to assist with audio file management. It provides a set of utilities for converting, cleaning, and organizing audio libraries, intended for sound engineers, producers, and data archivists.
 
-## Introduction
+The goal is to simplify repetitive tasks through a reliable command-line interface.
 
-The Audio Tools script is a comprehensive audio processing tool that combines multiple functionalities for managing audio files. It allows you to convert audio files to MP3, remove short or long audio files, scan and copy audio files from subfolders, clean filenames, and search and process audio files based on their names.
+---
 
-## Installation
+## ✨ Features
 
-There are two ways to install the Audio Tools script:
+*   **📦 Modular**: Built with reusable libraries to ensure maintainability and easy extension.
+*   **🛡️ Safer Operations**: Prioritizes using the system trash (freedesktop.org/macOS) over permanent deletion to prevent accidental data loss.
+*   **⚙️ Automation**: Includes dependency checks and error handling for consistent operation.
+*   **🖥️ Interactive**: specific commands are not required; an interactive menu guides the usage.
+*   **⚡ Lightweight**: Written in standard Bash with minimal dependencies.
 
-### Method 1: One-Line Installation from GitHub
+---
 
-You can install the Audio Tools script directly from GitHub using the following command:
+## 🛠️ Functionality
+
+The toolkit is organized into three main modules:
+
+### 1. 🔄 **Converter**
+*   **Format Conversion**: Converts `WAV`, `FLAC`, and `OGG` files to **320kbps MP3**.
+*   **Batch Mode**: Processes entire directories recursively.
+*   **Efficiency**: Skips files that have already been processed.
+
+### 2. 🧹 **Cleaner**
+*   **Duration Filtering**: clean up folders by archiving or removing audio files that are too short (glitches) or too long.
+*   **Filename Sanitization**: Standardizes filenames by removing special characters and spaces to improve compatibility.
+
+### 3. 🗂️ **Organizer**
+*   **Centralization**: Scans subdirectories and consolidates audio files into a single location.
+*   **Search & Action**: Allows users to find files by keyword and perform batch operations such as copying or deleting.
+
+---
+
+## 📂 Project Structure
+
+```text
+audio-tools/
+├── 📂 bin/             # Main executable
+│   └── audio-tools
+├── 📂 lib/             # Logic libraries
+│   ├── 📂 modules/     # Toolsets (converter, cleaner, organizer)
+│   └── utils.sh        # Utilities (logging, UI, trash)
+├── install.sh          # Installation script
+└── README.md           # Documentation
+```
+
+---
+
+## 🚀 Installation
+
+### Option A: Automatic
+
+To clone and install the tools in one step:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ekosistema/audio-tools/main/install.sh)"
+git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh
 ```
 
-This method will:
-- Install necessary dependencies (ffmpeg and sed)
-- Download the audio_tools script
-- Set up the script in your system
-- Add the script's location to your PATH
+### Option B: Manual
 
-### Method 2: Manual Installation
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/ekosistema/audio-tools.git
+    ```
+2.  **Copy files**:
+    Place `bin` and `lib` in a directory like `~/.local/share/audio-tools`.
+3.  **Link**:
+    Create a symbolic link to the executable:
+    ```bash
+    ln -sf ~/.local/share/audio-tools/bin/audio-tools ~/.local/bin/audio-tools
+    ```
 
-If you prefer to install the script manually:
+---
 
-1. Clone the repository or download the `audio_tools.sh` script.
-2. Move the script to a directory in your PATH, for example:
-   ```
-   mv audio_tools.sh ~/bin/audio_tools
-   ```
-3. Give the script execution permissions:
-   ```
-   chmod +x ~/bin/audio_tools
-   ```
-4. Ensure that `~/bin` is in your PATH. If it's not, add the following line to your `~/.bashrc` or `~/.zshrc`:
-   ```
-   export PATH="$HOME/bin:$PATH"
-   ```
-5. Reload your shell configuration:
-   ```
-   source ~/.bashrc  # or source ~/.zshrc if you use Zsh
-   ```
+## 🎮 Usage
 
-### Dependencies
+To start the interactive menu, run:
 
-The installation script will attempt to install the following dependencies if they're not already present:
-- `ffmpeg`: For audio conversion and duration checking
-- `sed`: For filename cleaning (usually pre-installed on most Unix-like systems)
-
-If the automatic installation fails, you may need to install these manually using your system's package manager.
-
-## Usage
-
-After installation, you can run the script from anywhere by typing:
-
-```
-audio_tools
+```bash
+audio-tools
 ```
 
-The script will display a menu with options. Enter the number corresponding to the desired function and follow the prompts. By default, all functions will use the current directory as the working directory, but you can specify a different directory if needed.
+Available options:
 
-## Functions
+1.  🎵 **Convert files to MP3**
+2.  ⏱️ **Remove short audio files**
+3.  📥 **Scan and copy audio files**
+4.  📝 **Clean filenames**
+5.  ⏳ **Remove long audio files**
+6.  🔍 **Search and process audio files**
 
-### Convert files to MP3
+---
 
-This function converts WAV, OGG, and FLAC files to MP3 format.
+## ❓ Troubleshooting
 
-- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
-- The script will create a new folder named `converted_mp3` in the specified directory.
-- All converted files will be saved in the `converted_mp3` folder.
+| Problem | Possible Cause | Solution |
+| :--- | :--- | :--- |
+| **"Command not found"** | Installation path missing from `PATH`. | Add `export PATH=$PATH:~/.local/bin` to your shell configuration (`.bashrc`/`.zshrc`). |
+| **"Permission denied"** | Missing execution rights. | Run `chmod +x install.sh` or check folder permissions. |
+| **"ffmpeg not found"** | Dependency missing. | Install manually via package manager (e.g., `apt install ffmpeg` or `brew install ffmpeg`). |
+| **Files permanently deleted** | `trash-cli` missing. | The script attempts to use system trash; if unavailable on Linux, install `trash-cli` or `trash`. |
 
-### Remove short audio files
+---
 
-This function removes audio files shorter than a specified duration.
+## 👨‍💻 Credits
 
-- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
-- You will need to specify the maximum duration (in seconds) for files to be deleted.
-- The script will remove all audio files shorter than the specified duration.
+**Audio Tools** is maintained by **[CeleroLab.Com](https://celerolab.com)**.
 
-### Scan and copy audio files from subfolders
-
-This function scans the specified folder and its subfolders for audio files and copies them to a single folder.
-
-- You will be asked to provide the path to the folder to scan (press Enter to use the current directory).
-- The script will create a new folder named `ALL_AUDIOS` in the specified directory.
-- All found audio files will be copied to the `ALL_AUDIOS` folder.
-
-### Clean filenames
-
-This function removes non-standard characters from filenames and replaces spaces with underscores.
-
-- You will be asked to provide the path to the folder containing the files to be renamed (press Enter to use the current directory).
-- The script will rename all files in the specified folder, removing non-standard characters and replacing spaces with underscores.
-
-### Remove long audio files
-
-This function removes audio files longer than a specified duration.
-
-- You will be asked to provide the path to the folder containing the audio files (press Enter to use the current directory).
-- You will need to specify the maximum duration (in seconds) for files to keep.
-- The script will remove all audio files longer than the specified duration.
-
-### Search and process audio files
-
-This function searches for audio files containing a specific string in their filename and allows you to delete or extract them.
-
-- You will be asked to provide the path to the folder to search (press Enter to use the current directory).
-- You will need to enter a text string to search for in the filenames.
-- The script will display the number of files found.
-- You can choose to delete the found files or extract (copy) them to a new folder.
-- If you choose to delete:
-  - You will be asked for confirmation before proceeding.
-  - The script will attempt to move files to the system trash.
-  - If moving to trash fails, files will be moved to a "to_delete" folder within the search directory.
-  - You will be informed of how many files were moved to trash, moved to the "to_delete" folder, or couldn't be moved.
-- If you choose to extract:
-  - Files will be copied to a new folder named after your search string within the search directory.
-
-## Troubleshooting
-
-- If you encounter a "command not found" error after installation, try restarting your terminal or running `source ~/.bashrc` (for Bash) or `source ~/.zshrc` (for Zsh).
-- If the automatic dependency installation fails, you may need to install ffmpeg manually using your system's package manager.
-- Make sure you have write permissions in the folders you're working with.
-- If you're having issues with file paths, try using absolute paths instead of relative paths.
-- If changes to your PATH are not taking effect, try logging out and back in to your system.
-- If files can't be moved to the system trash, check if you have the necessary permissions and if your system's trash functionality is working correctly.
-- If a "to_delete" folder is created, review its contents before manually deleting them, as these are files that couldn't be moved to the system trash.
-
-For any other issues or questions, please open an issue on the GitHub repository or contact the script maintainer.
+*   **License**: MIT
+*   **Version**: 2.0.0

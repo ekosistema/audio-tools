@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# ==============================================================================
+# Audio Tools - Main Executable
+#
+# Description: Main entry point for the Audio Tools suite.
+# Author: CeleroLab.Com
+# Copyright: (c) 2024 CeleroLab.Com
+# License: MIT
+# ==============================================================================
+
+# Resolve script location to find libraries
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+  DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+LIB_DIR="$DIR/../lib"
+
+# Source libraries
+source "$LIB_DIR/utils.sh"
+source "$LIB_DIR/modules/converter.sh"
+source "$LIB_DIR/modules/cleaner.sh"
+source "$LIB_DIR/modules/organizer.sh"
+
+show_menu() {
+    echo "
+Audio Tools Extended
+--------------------
+Current Directory: $(pwd)
+--------------------
+1. Convert files to MP3
+2. Remove short audio files
+3. Scan and copy audio files from subfolders
+4. Clean filenames
+5. Remove long audio files
+6. Search and process audio files
+7. Exit
+"
+}
+
+main() {
+    log_info "Welcome to Audio Tools"
+    
+    while true; do
+        show_menu
+        read -p "Enter the number of the desired option: " choice
+
+        case $choice in
+            1) convert_to_mp3 ;;
+            2) remove_short_audios ;;
+            3) scan_audios_subfolders ;;
+            4) clean_filenames ;;
+            5) remove_long_audios ;;
+            6) search_and_process_audios ;;
+            7) log_info "Exiting."; exit 0 ;;
+            *) log_error "Invalid option. Please try again." ;;
+        esac
+
+        # Robust continue loop
+        while true; do
+            echo ""
+            read -p "Do you want to perform another operation? (y/n): " continue
+            case "${continue,,}" in
+                y|yes|s|si) 
+                    break # Break inner loop, returns to main loop
+                    ;;
+                n|no) 
+                    log_info "Exiting."
+                    exit 0 
+                    ;;
+                *) 
+                    log_error "Invalid input. Please enter 'y' or 'n'." 
+                    ;;
+            esac
+        done
+    done
+}
+
+main "$@"

@@ -1,102 +1,103 @@
 #!/bin/bash
 
-# Function to check if a command exists
+# ==============================================================================
+# Audio Tools - Installer
+#
+# Description: Automated installation script for Audio Tools.
+# Author: CeleroLab.Com
+# Copyright: (c) 2024 CeleroLab.Com
+# License: MIT
+# ==============================================================================
+
+INSTALL_DIR="$HOME/.local/share/audio-tools"
+BIN_DIR="$HOME/.local/bin"
+EXECUTABLE_NAME="audio-tools"
+
+# Color helpers
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
+
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to install dependencies
-install_dependencies() {
-    echo "Checking and installing dependencies for the Audio Tools Scripts..."
-
-    # Check if ffmpeg is installed
-    if command_exists ffmpeg; then
-        echo "FFmpeg is already installed."
-    else
-        echo "FFmpeg is not installed. Attempting to install..."
-        
-        # Check the package manager and install ffmpeg
-        if command_exists apt-get; then
-            sudo apt-get update
-            sudo apt-get install -y ffmpeg sed
-        elif command_exists yum; then
-            sudo yum install -y ffmpeg sed
-        elif command_exists brew; then
-            brew install ffmpeg sed
-        else
-            echo "Unable to install FFmpeg. Please install it manually."
-            exit 1
-        fi
-        
-        # Verify installation
-        if command_exists ffmpeg; then
-            echo "FFmpeg has been successfully installed."
-        else
-            echo "Failed to install FFmpeg. Please install it manually."
-            exit 1
-        fi
-    fi
-
-    echo "All dependencies are installed."
-}
-
-# Function to detect the current shell
-detect_shell() {
-    if [ -n "$ZSH_VERSION" ]; then
-        echo "zsh"
-    elif [ -n "$BASH_VERSION" ]; then
-        echo "bash"
-    else
-        echo "unknown"
-    fi
-}
-
-# Function to add directory to PATH in the appropriate shell config file
-add_to_path() {
-    local shell_config
-    case $1 in
-        zsh)
-            shell_config="$HOME/.zshrc"
-            ;;
-        bash)
-            shell_config="$HOME/.bashrc"
-            ;;
-        *)
-            echo "Unsupported shell. Please add ~/bin to your PATH manually."
-            return 1
-            ;;
+detect_shell_config() {
+    local shell_name
+    shell_name=$(basename "$SHELL")
+    case "$shell_name" in
+        zsh) echo "$HOME/.zshrc" ;;
+        bash) echo "$HOME/.bashrc" ;;
+        *) echo "" ;;
     esac
+}
 
-    if ! grep -q 'export PATH="$HOME/bin:$PATH"' "$shell_config"; then
-        echo 'export PATH="$HOME/bin:$PATH"' >> "$shell_config"
-        echo "Added ~/bin to PATH in $shell_config"
+install_dependencies() {
+    log_info "Checking dependencies..."
+    if command_exists ffmpeg; then
+        log_info "FFmpeg is already installed."
     else
-        echo "~/bin is already in PATH in $shell_config"
+        log_info "Installing FFmpeg..."
+        if command_exists apt-get; then
+            sudo apt-get update && sudo apt-get install -y ffmpeg
+        elif command_exists brew; then
+            brew install ffmpeg
+        elif command_exists yum; then
+            sudo yum install -y ffmpeg
+        elif command_exists dnf; then
+            sudo dnf install -y ffmpeg
+        elif command_exists pacman; then
+            sudo pacman -S ffmpeg
+        else
+            log_error "Could not identify package manager. Please install ffmpeg manually."
+            exit 1
+        fi
     fi
 }
 
-# Main installation process
-main() {
-    # Install dependencies
-    install_dependencies
+install_files() {
+    log_info "Installing files to $INSTALL_DIR..."
+    mkdir -p "$INSTALL_DIR"
+    mkdir -p "$BIN_DIR"
 
-    # Create bin directory if it doesn't exist
-    mkdir -p ~/bin
+    # Copy files
+    cp -r bin lib "$INSTALL_DIR/"
+    chmod +x "$INSTALL_DIR/bin/audio-tools"
 
-    # Download audio_tools.sh from GitHub and move it to ~/bin
-    echo "Downloading audio_tools script..."
-    curl -s https://raw.githubusercontent.com/ekosistema/audio-tools/main/audio_tools.sh > ~/bin/audio_tools
-
-    # Make it executable
-    chmod +x ~/bin/audio_tools
-
-    # Detect shell and add ~/bin to PATH
-    local shell_type=$(detect_shell)
-    add_to_path "$shell_type"
-
-    echo "Installation completed. Please restart your terminal or run 'source ~/.bashrc' or 'source ~/.zshrc' depending on your shell."
-    echo "You can now use the 'audio_tools' command from anywhere in your system."
+    # Create symlink
+    ln -sf "$INSTALL_DIR/bin/audio-tools" "$BIN_DIR/$EXECUTABLE_NAME"
+    log_info "Created symlink at $BIN_DIR/$EXECUTABLE_NAME"
 }
 
-# Run the main function
+update_path() {
+    if [[ ":$PATH:" != *":$BIN_DIR:"* ]]; then
+        local config_file
+        config_file=$(detect_shell_config)
+        
+        if [ -n "$config_file" ]; then
+            if ! grep -q "$BIN_DIR" "$config_file"; then
+                echo "" >> "$config_file"
+                echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$config_file"
+                log_info "Added $BIN_DIR to PATH in $config_file"
+                log_info "Please run 'source $config_file' or restart your terminal."
+            else
+                log_info "$BIN_DIR is already configured in $config_file"
+            fi
+        else
+            log_info "Could not detect shell config. Please add $BIN_DIR to your PATH manually."
+        fi
+    fi
+}
+
+main() {
+    install_dependencies
+    install_files
+    update_path
+    log_info "Installation completed successfully!"
+    log_info "Run '$EXECUTABLE_NAME' to start."
+}
+
 main
