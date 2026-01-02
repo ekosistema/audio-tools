@@ -9,7 +9,6 @@
 # License: MIT
 # ==============================================================================
 
-# Ensure utils are loaded
 if [ -z "$(type -t log_info)" ]; then
     source "$(dirname "${BASH_SOURCE[0]}")/../utils.sh"
     fi
@@ -28,14 +27,12 @@ scan_audios_subfolders() {
 
     log_info "Scanning and copying audio files to $destination_folder..."
 
-    # Find audio files efficiently
     while IFS= read -r -d '' file; do
         local base_name
         base_name=$(basename "$file")
         local destination="$destination_folder/$base_name"
         local counter=1
         
-        # Handle duplicates
         while [ -e "$destination" ]; do
             local name="${base_name%.*}"
             local extension="${base_name##*.}"
@@ -44,7 +41,7 @@ scan_audios_subfolders() {
         done
         
         cp "$file" "$destination"
-        echo "Copied: $file -> $destination" # Verbose for user
+        echo "Copied: $file -> $destination"
     done < <(find "$source_folder" -type f \( -iname "*.mp3" -o -iname "*.wav" -o -iname "*.ogg" -o -iname "*.flac" -o -iname "*.aac" -o -iname "*.wma" -o -iname "*.m4a" \) -print0)
 
     log_info "Process completed. All audio files have been copied to the ALL_AUDIOS folder."
@@ -54,6 +51,7 @@ search_and_process_audios() {
     local input_path="$1"
     local search_term="$2"
     local action_choice="$3" # d (delete) or e (extract)
+    local confirm="${4:-no}" # yes/no, default no
 
     local initial_folder=$(get_folder_path "Enter the path of the folder to search" "$(pwd)" "$input_path")
 
@@ -68,7 +66,6 @@ search_and_process_audios() {
 
     log_info "Searching for audio files containing '$search_term' in '$initial_folder'..."
 
-    # Use array to store found files
     local found_files=()
     while IFS= read -r -d '' file; do
         found_files+=("$file")
@@ -89,26 +86,28 @@ search_and_process_audios() {
 
         case $action in
             [Dd]* ) 
-                log_warn "WARNING: You are about to move ${#found_files[@]} files to the trash."
-                read -p "Are you sure you want to proceed? (yes/no): " confirm
-                if [[ $confirm == "yes" ]]; then
-                    local trash_count=0
-                    local to_delete_count=0
-                    local fail_count=0
-                    for file in "${found_files[@]}"; do
-                        move_to_trash "$file" "$initial_folder"
-                        case $? in
-                            0) ((trash_count++));;
-                            2) ((to_delete_count++));;
-                            1) ((fail_count++));;
-                        esac
-                    done
-                    log_info "Moved $trash_count files to trash."
-                    break
-                else
-                    log_info "Operation cancelled."
-                    break
+                if [[ "$confirm" != "yes" ]]; then
+                    log_warn "WARNING: You are about to move ${#found_files[@]} files to the trash."
+                    read -p "Are you sure you want to proceed? (yes/no): " user_confirm
+                    if [[ "$user_confirm" != "yes" ]]; then
+                         log_info "Operation cancelled."
+                         break
+                    fi
                 fi
+                
+                local trash_count=0
+                local to_delete_count=0
+                local fail_count=0
+                for file in "${found_files[@]}"; do
+                    move_to_trash "$file" "$initial_folder" && status=0 || status=$?
+                    case $status in
+                        0) ((trash_count++));;
+                        2) ((to_delete_count++));;
+                        *) ((fail_count++));;
+                    esac
+                done
+                log_info "Moved $trash_count files to trash."
+                break
                 ;;
             [Ee]* )
                 local destination_folder="${initial_folder}/${search_term}_extracted"
@@ -122,7 +121,7 @@ search_and_process_audios() {
                 ;;
             * ) 
                 echo "Please answer d for delete or e for extract."
-                action_choice="" # clear invalid choice to loop prompt
+                action_choice="" 
                 ;;
         esac
     done

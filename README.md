@@ -10,9 +10,9 @@ The goal is to simplify repetitive tasks through a reliable command-line interfa
 ## ✨ Features
 
 *   **📦 Modular**: Built with reusable libraries to ensure maintainability and easy extension.
-*   **🛡️ Safer Operations**: Prioritizes using the system trash (freedesktop.org/macOS) over permanent deletion to prevent accidental data loss.
-*   **⚙️ Automation**: Includes dependency checks and error handling for consistent operation.
-*   **🖥️ Interactive**: specific commands are not required; an interactive menu guides the usage.
+*   **🛡️ Safer Operations**: Implements "Strict Mode" (set -euo pipefail), dependency checks, and prioritizes system trash.
+*   **⚙️ Automation**: Supports fully automated batch processing via CLI arguments.
+*   **🖥️ Hybrid Interface**: choose between a guided **Interactive Menu** or advanced **Batch Mode** for scripting.
 *   **⚡ Lightweight**: Written in standard Bash with minimal dependencies.
 
 ---
@@ -79,20 +79,50 @@ git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./i
 
 ## 🎮 Usage
 
-To start the interactive menu, run:
-
+### 🖥️ Interactive Mode
+Run without arguments to launch the guided menu:
 ```bash
 audio-tools
 ```
 
-Available options:
+### 🤖 Batch Mode (CLI)
+Run with arguments to bypass the menu.
 
-1.  🎵 **Convert files to MP3**
-2.  ⏱️ **Remove short audio files**
-3.  📥 **Scan and copy audio files**
-4.  📝 **Clean filenames**
-5.  ⏳ **Remove long audio files**
-6.  🔍 **Search and process audio files**
+**Syntax:**
+```bash
+audio-tools [OPTIONS]
+```
+
+**Options:**
+| Flag | Description |
+| :--- | :--- |
+| `-h`, `--help` | Show help message |
+| `-d`, `--directory PATH` | Target directory (defaults to current) |
+| `-a`, `--action ACTION` | Action to perform (see below) |
+| `-t`, `--threshold SEC` | Duration threshold (for remove_short/long) |
+| `-q`, `--query TEXT` | Search query (for search action) |
+| `-o`, `--operation OP` | Search operation: `delete` or `extract` |
+| `-f`, `--force` | Skip confirmation prompts (for scripts) |
+
+**Available Actions (`--action`):**
+1.  `convert` - Convert to MP3
+2.  `remove_short` - Remove short files
+3.  `remove_long` - Remove long files
+4.  `clean_names` - Sanitize filenames
+5.  `scan` - Copy all audios from subfolders
+6.  `search` - Search and process
+
+**Examples:**
+```bash
+# Convert all files in current dir
+audio-tools --action convert
+
+# Remove files shorter than 2 seconds in specific folder (force yes)
+audio-tools --action remove_short --threshold 2 --directory /tmp/samples --force
+
+# Search for "kick" and extract matches
+audio-tools --action search --query "kick" --operation extract
+```
 
 ---
 
@@ -112,4 +142,4 @@ Available options:
 **Audio Tools** is maintained by **[CeleroLab.Com](https://celerolab.com)**.
 
 *   **License**: MIT
-*   **Version**: 2.0.0
+*   **Version**: 2.1.0

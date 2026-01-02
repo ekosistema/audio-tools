@@ -13,10 +13,9 @@ INSTALL_DIR="$HOME/.local/share/audio-tools"
 BIN_DIR="$HOME/.local/bin"
 EXECUTABLE_NAME="audio-tools"
 
-# Color helpers
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+NC='\033[0m' 
 
 log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
@@ -63,11 +62,9 @@ install_files() {
     mkdir -p "$INSTALL_DIR"
     mkdir -p "$BIN_DIR"
 
-    # Copy files
     cp -r bin lib "$INSTALL_DIR/"
     chmod +x "$INSTALL_DIR/bin/audio-tools"
 
-    # Create symlink
     ln -sf "$INSTALL_DIR/bin/audio-tools" "$BIN_DIR/$EXECUTABLE_NAME"
     log_info "Created symlink at $BIN_DIR/$EXECUTABLE_NAME"
 }

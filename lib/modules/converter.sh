@@ -9,7 +9,6 @@
 # License: MIT
 # ==============================================================================
 
-# Ensure utils are loaded
 if [ -z "$(type -t log_info)" ]; then
     source "$(dirname "${BASH_SOURCE[0]}")/../utils.sh"
     fi
@@ -30,7 +29,6 @@ convert_to_mp3() {
 
     log_info "Starting conversion in: $source_folder"
 
-    # Use nullglob to handle no matches gracefully
     shopt -s nullglob
     local files=("$source_folder"/*.wav "$source_folder"/*.ogg "$source_folder"/*.flac)
     shopt -u nullglob
@@ -44,7 +42,7 @@ convert_to_mp3() {
         [ -e "$file" ] || continue
         log_info "Converting: $(basename "$file")"
         local output_file="${output_folder}/$(basename "${file%.*}").mp3"
-        run_media_tool ffmpeg -v error -i "$file" -acodec libmp3lame -b:a 320k -ar 44100 -ac 2 "$output_file"
+        run_media_tool ffmpeg -v error -i "$file" -acodec libmp3lame -b:a 320k -ar 44100 -ac 2 "$output_file" || log_error "Failed to convert: $(basename "$file")"
     done
 
     log_info "Conversion completed. MP3 files are located in: $output_folder"

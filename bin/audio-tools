@@ -9,7 +9,14 @@
 # License: MIT
 # ==============================================================================
 
-# Resolve script location to find libraries
+set -euo pipefail
+IFS=$'\n\t'
+
+cleanup() {
+    :
+}
+trap cleanup EXIT
+
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
   DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
@@ -19,14 +26,47 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 LIB_DIR="$DIR/../lib"
 
-# Source libraries
 source "$LIB_DIR/utils.sh"
 source "$LIB_DIR/modules/converter.sh"
 source "$LIB_DIR/modules/cleaner.sh"
 source "$LIB_DIR/modules/organizer.sh"
 
-show_menu() {
-    echo "
+check_needed_dependencies() {
+    local deps=("ffmpeg" "ffprobe")
+    local missing=0
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" >/dev/null 2>&1; then
+            log_error "Missing required dependency: $dep"
+            missing=1
+        fi
+    done
+    
+    if [ "$missing" -eq 1 ]; then
+        log_error "Please install missing dependencies and try again."
+        exit 1
+    fi
+}
+
+show_help() {
+    echo "Usage: audio-tools [OPTIONS]"
+    echo ""
+    echo "Options:"
+    echo "  -h, --help                 Show this help message"
+    echo "  -d, --directory PATH       Target directory for operations"
+    echo "  -a, --action ACTION        Action to perform: convert, remove_short, remove_long, clean_names, scan, search"
+    echo "  -t, --threshold SECONDS    Duration threshold (for remove_short/long)"
+    echo "  -q, --query STRING         Search query (for search action)"
+    echo "  -o, --operation OP         Search operation: delete or extract (for search action)"
+    echo "  -f, --force                Skip confirmation prompts"
+    echo ""
+    echo "If no arguments are provided, the interactive menu will be launched."
+}
+
+run_interactive_menu() {
+    log_info "Welcome to Audio Tools"
+    
+    while true; do
+        echo "
 Audio Tools Extended
 --------------------
 Current Directory: $(pwd)
@@ -39,44 +79,93 @@ Current Directory: $(pwd)
 6. Search and process audio files
 7. Exit
 "
-}
-
-main() {
-    log_info "Welcome to Audio Tools"
-    
-    while true; do
-        show_menu
+        local choice
         read -p "Enter the number of the desired option: " choice
 
         case $choice in
-            1) convert_to_mp3 ;;
-            2) remove_short_audios ;;
-            3) scan_audios_subfolders ;;
-            4) clean_filenames ;;
-            5) remove_long_audios ;;
-            6) search_and_process_audios ;;
+            1) convert_to_mp3 "" || log_error "Conversion failed." ;;
+            2) remove_short_audios "" "" "no" || log_error "Operation failed." ;;
+            3) scan_audios_subfolders "" || log_error "Scan failed." ;;
+            4) clean_filenames "" || log_error "Cleanup failed." ;;
+            5) remove_long_audios "" "" "no" || log_error "Operation failed." ;;
+            6) search_and_process_audios "" "" "" "no" || log_error "Search failed." ;;
             7) log_info "Exiting."; exit 0 ;;
             *) log_error "Invalid option. Please try again." ;;
         esac
 
-        # Robust continue loop
-        while true; do
-            echo ""
-            read -p "Do you want to perform another operation? (y/n): " continue
-            case "${continue,,}" in
-                y|yes|s|si) 
-                    break # Break inner loop, returns to main loop
-                    ;;
-                n|no) 
-                    log_info "Exiting."
-                    exit 0 
-                    ;;
-                *) 
-                    log_error "Invalid input. Please enter 'y' or 'n'." 
-                    ;;
-            esac
-        done
+        echo ""
+        read -p "Press Enter to return to the menu..."
     done
+}
+
+main() {
+    check_needed_dependencies
+
+    local action=""
+    local directory=""
+    local threshold=""
+    local query=""
+    local operation=""
+    local force="no"
+    local has_args=false
+
+    if [ "$#" -gt 0 ]; then
+        has_args=true
+    fi
+
+    if [ "$has_args" = false ]; then
+        run_interactive_menu
+        exit 0
+    fi
+
+    while [[ "$#" -gt 0 ]]; do
+        case $1 in
+            -h|--help) show_help; exit 0 ;;
+            -d|--directory) directory="$2"; shift ;;
+            -a|--action) action="$2"; shift ;;
+            -t|--threshold) threshold="$2"; shift ;;
+            -q|--query) query="$2"; shift ;;
+            -o|--operation) operation="$2"; shift ;;
+            -f|--force) force="yes" ;;
+            *) log_error "Unknown parameter passed: $1"; show_help; exit 1 ;;
+        esac
+        shift
+    done
+
+    if [ -z "$action" ]; then
+        log_error "Action is required in batch mode (use --action)."
+        show_help
+        exit 1
+    fi
+
+    case "$action" in
+        convert)
+            convert_to_mp3 "$directory"
+            ;;
+        remove_short)
+            if [ -z "$threshold" ]; then log_error "Threshold is required for remove_short."; exit 1; fi
+            remove_short_audios "$directory" "$threshold" "$force"
+            ;;
+        remove_long)
+            if [ -z "$threshold" ]; then log_error "Threshold is required for remove_long."; exit 1; fi
+            remove_long_audios "$directory" "$threshold" "$force"
+            ;;
+        clean_names)
+            clean_filenames "$directory"
+            ;;
+        scan)
+            scan_audios_subfolders "$directory"
+            ;;
+        search)
+            if [ -z "$query" ]; then log_error "Query is required for search."; exit 1; fi
+            search_and_process_audios "$directory" "$query" "$operation" "$force"
+            ;;
+        *)
+            log_error "Invalid action: $action"
+            show_help
+            exit 1
+            ;;
+    esac
 }
 
 main "$@"
