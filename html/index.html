@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Tools | A Bash Suite for Audio Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./dist/output.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -155,12 +155,13 @@
             </div>
             <div class="bg-black p-1 rounded-2xl shadow-inner border border-white/10">
                 <div class="flex items-center justify-between p-4 px-6 mono text-sm md:text-base">
-                    <code
+                    <code id="install-cmd"
                         class="text-sky-400">git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh</code>
-                    <button
-                        class="ml-4 p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white">
+                    <button id="copy-btn"
+                        class="ml-4 p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white"
+                        title="Copy to clipboard">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z">
                             </path>
                         </svg>
@@ -186,6 +187,34 @@
         <p class="text-slate-600 text-xs">Released under MIT License. v2.1.0</p>
     </footer>
 
+    <script>
+        document.getElementById('copy-btn').addEventListener('click', async () => {
+            const command = document.getElementById('install-cmd').innerText;
+            const btn = document.getElementById('copy-btn');
+            const originalIcon = btn.innerHTML;
+
+            try {
+                await navigator.clipboard.writeText(command);
+
+                // Visual feedback: Change icon to checkmark
+                btn.innerHTML = `
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                `;
+                btn.classList.add('bg-white/10');
+
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    btn.innerHTML = originalIcon;
+                    btn.classList.remove('bg-white/10');
+                }, 2000);
+
+            } catch (err) {
+                console.error('Failed to copy!', err);
+            }
+        });
+    </script>
 </body>
 
 </html>
