@@ -1,15 +1,14 @@
 {
-  "name": "html",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "audio-tools-landing",
+  "version": "3.0.0",
+  "description": "Marketing landing page for Audio Tools — a Bash suite for audio management.",
   "scripts": {
     "dev": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "build": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --minify"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["audio", "bash", "ffmpeg", "mp3", "converter"],
+  "author": "CeleroLab",
+  "license": "MIT",
   "type": "commonjs",
   "devDependencies": {
     "autoprefixer": "^10.4.24",

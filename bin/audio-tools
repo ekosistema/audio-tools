@@ -1,20 +1,9 @@
 #!/bin/bash
-
-# ==============================================================================
-# Audio Tools - Main Executable
-#
-# Description: Main entry point for the Audio Tools suite.
-# Author: CeleroLab.Com
-# Copyright: (c) 2024 CeleroLab.Com
-# License: MIT
-# ==============================================================================
-
+# Audio Tools — Thin entrypoint
 set -euo pipefail
 IFS=$'\n\t'
 
-cleanup() {
-    :
-}
+cleanup() { :; }
 trap cleanup EXIT
 
 SOURCE="${BASH_SOURCE[0]}"
@@ -24,148 +13,282 @@ while [ -h "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
+export AUDIO_TOOLS_BIN_DIR="$DIR"
 LIB_DIR="$DIR/../lib"
 
-source "$LIB_DIR/utils.sh"
-source "$LIB_DIR/modules/converter.sh"
-source "$LIB_DIR/modules/cleaner.sh"
-source "$LIB_DIR/modules/organizer.sh"
+# Foundation
+source "$LIB_DIR/utils/errors.sh"
+source "$LIB_DIR/utils/logging.sh"
+source "$LIB_DIR/utils/config.sh"
+source "$LIB_DIR/utils/progress.sh"
 
-check_needed_dependencies() {
-    local deps=("ffmpeg" "ffprobe")
-    local missing=0
-    for dep in "${deps[@]}"; do
-        if ! command -v "$dep" >/dev/null 2>&1; then
-            log_error "Missing required dependency: $dep"
-            missing=1
-        fi
+# I/O layer
+source "$LIB_DIR/io/filesystem.sh"
+source "$LIB_DIR/io/media.sh"
+source "$LIB_DIR/io/trash.sh"
+
+# CLI layer (new dispatcher takes precedence)
+source "$LIB_DIR/cli/dispatcher.sh"
+source "$LIB_DIR/cli/help.sh"
+source "$LIB_DIR/cli/completion.sh"
+
+# CLI UI layer (TUI, output formatting, file browser)
+source "$LIB_DIR/cli/ui/output.sh"
+source "$LIB_DIR/cli/ui/args_parser.sh"
+source "$LIB_DIR/cli/ui/progress.sh"
+source "$LIB_DIR/cli/ui/tui.sh"
+source "$LIB_DIR/cli/ui/file_browser.sh"
+
+# Core modules
+source "$LIB_DIR/core/converter.sh"
+source "$LIB_DIR/core/cleaner.sh"
+source "$LIB_DIR/core/organizer.sh"
+source "$LIB_DIR/core/inspector.sh"
+source "$LIB_DIR/core/processor.sh"
+source "$LIB_DIR/core/deduper.sh"
+source "$LIB_DIR/core/validator.sh"
+
+# ── Helpers ──
+
+confirm_or_force() {
+    local message="$1"
+    if [ "$AUDIO_TOOLS_FORCE" = "yes" ]; then return 0; fi
+    log_warn "$message"
+    local response
+    read -p "  Are you sure? (yes/no): " response
+    [ "$response" = "yes" ]
+}
+
+trash_file_list() {
+    local folder="${1:-.}"; shift
+    local trash_count=0 to_delete_count=0 fail_count=0
+    while IFS= read -r -d '' file; do
+        move_to_trash "$file" "$folder" && status=0 || status=$?
+        case $status in
+            0) trash_count=$((trash_count + 1));;
+            2) to_delete_count=$((to_delete_count + 1));;
+            *) fail_count=$((fail_count + 1));;
+        esac
     done
-    
-    if [ "$missing" -eq 1 ]; then
-        log_error "Please install missing dependencies and try again."
-        exit 1
+    log_info "$trash_count files moved to trash."
+    if [ "$to_delete_count" -gt 0 ]; then
+        log_info "$to_delete_count files moved to fallback folder."
+    fi
+    if [ "$fail_count" -gt 0 ]; then
+        log_error "$fail_count files could not be moved."
     fi
 }
 
-show_help() {
-    echo "Usage: audio-tools [OPTIONS]"
-    echo ""
-    echo "Options:"
-    echo "  -h, --help                 Show this help message"
-    echo "  -d, --directory PATH       Target directory for operations"
-    echo "  -a, --action ACTION        Action to perform: convert, remove_short, remove_long, clean_names, scan, search"
-    echo "  -t, --threshold SECONDS    Duration threshold (for remove_short/long)"
-    echo "  -q, --query STRING         Search query (for search action)"
-    echo "  -o, --operation OP         Search operation: delete or extract (for search action)"
-    echo "  -f, --force                Skip confirmation prompts"
-    echo ""
-    echo "If no arguments are provided, the interactive menu will be launched."
+# ── Dependency check ──
+
+check_dependencies() {
+    local missing=0
+    if ! command -v ffmpeg >/dev/null 2>&1; then log_error "Missing dependency: ffmpeg"; missing=1; fi
+    if ! command -v ffprobe >/dev/null 2>&1; then log_error "Missing dependency: ffprobe"; missing=1; fi
+    if [ "$missing" -eq 1 ]; then die "$EX_UNAVAILABLE" "Install ffmpeg/ffprobe and try again."; fi
 }
 
-run_interactive_menu() {
-    log_info "Welcome to Audio Tools"
-    
-    while true; do
-        echo "
-Audio Tools Extended
---------------------
-Current Directory: $(pwd)
---------------------
-1. Convert files to MP3
-2. Remove short audio files
-3. Scan and copy audio files from subfolders
-4. Clean filenames
-5. Remove long audio files
-6. Search and process audio files
-7. Exit
-"
-        local choice
-        read -p "Enter the number of the desired option: " choice
+# ── Action dispatchers ──
 
-        case $choice in
-            1) convert_to_mp3 "" || log_error "Conversion failed." ;;
-            2) remove_short_audios "" "" "no" || log_error "Operation failed." ;;
-            3) scan_audios_subfolders "" || log_error "Scan failed." ;;
-            4) clean_filenames "" || log_error "Cleanup failed." ;;
-            5) remove_long_audios "" "" "no" || log_error "Operation failed." ;;
-            6) search_and_process_audios "" "" "" "no" || log_error "Search failed." ;;
-            7) log_info "Exiting."; exit 0 ;;
-            *) log_error "Invalid option. Please try again." ;;
-        esac
-
-        echo ""
-        read -p "Press Enter to return to the menu..."
-    done
+_resolve_all() {
+    local dir="${1:-}"
+    while IFS= read -r -d '' f; do printf '%s\0' "$f"; done < <(resolve_audio_files "$dir")
 }
+
+run_convert() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(_resolve_all "$dir")
+    if [ ${#files[@]} -gt 0 ]; then
+        validate_files_for_action "convert" "${files[@]}" || return 1
+    fi
+    convert_to_mp3 "$dir"
+}
+
+run_remove_short() {
+    if [ -z "${AUDIO_TOOLS_THRESHOLD:-}" ]; then die "$EX_USAGE" "Threshold (--threshold) is required for remove-short."; fi
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' file; do files+=("$file"); done < <(get_short_files "$dir" "$AUDIO_TOOLS_THRESHOLD")
+    if [ ${#files[@]} -eq 0 ]; then log_info "No short files found."; return 0; fi
+    confirm_or_force "This will delete short files." || { log_info "Cancelled."; return 0; }
+    init_progress ${#files[@]} "Trashing"
+    printf '%s\0' "${files[@]}" | while IFS= read -r -d '' f; do update_progress "$f"; done
+    printf '%s\0' "${files[@]}" | trash_file_list "$dir"
+    finish_progress $? 0 "done"
+}
+
+run_remove_long() {
+    if [ -z "${AUDIO_TOOLS_THRESHOLD:-}" ]; then die "$EX_USAGE" "Threshold (--threshold) is required for remove-long."; fi
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' file; do files+=("$file"); done < <(get_long_files "$dir" "$AUDIO_TOOLS_THRESHOLD")
+    if [ ${#files[@]} -eq 0 ]; then log_info "No long files found."; return 0; fi
+    confirm_or_force "This will delete long files." || { log_info "Cancelled."; return 0; }
+    init_progress ${#files[@]} "Trashing"
+    printf '%s\0' "${files[@]}" | while IFS= read -r -d '' f; do update_progress "$f"; done
+    printf '%s\0' "${files[@]}" | trash_file_list "$dir"
+    finish_progress $? 0 "done"
+}
+
+run_clean_names() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    clean_filenames "$dir"
+}
+
+run_scan() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-$(pwd)}"
+    scan_audios_subfolders "$dir"
+}
+
+run_search() {
+    if [ -z "${AUDIO_TOOLS_QUERY:-}" ]; then die "$EX_USAGE" "Query (--query) is required for search."; fi
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' file; do files+=("$file"); done < <(search_audios "$dir" "$AUDIO_TOOLS_QUERY")
+    if [ ${#files[@]} -eq 0 ]; then log_info "No files matching '$AUDIO_TOOLS_QUERY' found."; return 0; fi
+    local op="${AUDIO_TOOLS_OPERATION:-}"
+    if [ -z "$op" ]; then log_error "Operation (--operation) required: delete or extract."; return 1; fi
+    case "$op" in
+        delete)
+            confirm_or_force "This will delete matching files." || { log_info "Cancelled."; return 0; }
+            init_progress ${#files[@]} "Deleting"
+            printf '%s\0' "${files[@]}" | while IFS= read -r -d '' f; do update_progress "$f"; done
+            printf '%s\0' "${files[@]}" | trash_file_list "$dir"
+            finish_progress $? 0 "done" ;;
+        extract)
+            local dest="${AUDIO_TOOLS_DIRECTORY:-$(pwd)}/${AUDIO_TOOLS_QUERY}_extracted"
+            mkdir -p "$dest"
+            init_progress ${#files[@]} "Extracting to $dest"
+            for file in "${files[@]}"; do copy_with_rename "$file" "$dest"; update_progress "$file"; done
+            finish_progress ${#files[@]} 0 "extracted to $dest" ;;
+        *) die "$EX_USAGE" "Invalid operation '$op'. Use 'delete' or 'extract'." ;;
+    esac
+}
+
+run_completion() {
+    local shell="${AUDIO_TOOLS_COMPLETION_SHELL:-bash}"
+    case "$shell" in bash|zsh|fish) generate_completion "$shell" ;; *) die "$EX_USAGE" "Usage: audio-tools completion bash|zsh|fish" ;; esac
+}
+
+run_info() {
+    local file
+    if [ ${#AUDIO_TOOLS_FILES[@]} -gt 0 ]; then
+        file="${AUDIO_TOOLS_FILES[0]}"
+    else
+        file="${AUDIO_TOOLS_DIRECTORY:-$(pwd)}"
+    fi
+    audio_info "$file"
+}
+
+run_stats() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    audio_stats "$dir"
+}
+
+run_list() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    audio_list "$dir"
+}
+
+run_normalize() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(_resolve_all "$dir")
+    if [ ${#files[@]} -gt 0 ]; then
+        validate_files_for_action "normalize" "${files[@]}" || return 1
+    fi
+    audio_normalize "$dir"
+}
+
+run_trim_silence() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(_resolve_all "$dir")
+    if [ ${#files[@]} -gt 0 ]; then
+        validate_files_for_action "trim-silence" "${files[@]}" || return 1
+    fi
+    audio_trim_silence "$dir"
+}
+
+run_split_silence() {
+    local file
+    if [ ${#AUDIO_TOOLS_FILES[@]} -gt 0 ]; then
+        file="${AUDIO_TOOLS_FILES[0]}"
+    else
+        file="${AUDIO_TOOLS_DIRECTORY:-$(pwd)}"
+    fi
+    [ -f "$file" ] && validate_files_for_action "split-silence" "$file" || true
+    audio_split_silence "$file"
+}
+
+run_concat() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(_resolve_all "$dir")
+    if [ ${#files[@]} -lt 2 ]; then
+        log_error "Need at least 2 files to concatenate (found ${#files[@]})"; return 1
+    fi
+    validate_files_for_action "concat" "${files[@]}" || return 1
+    audio_concat "$dir"
+}
+
+run_find_dupes() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    audio_find_dupes "$dir"
+}
+
+run_dedup() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    local files=()
+    while IFS= read -r -d '' f; do files+=("$f"); done < <(_resolve_all "$dir")
+    if [ ${#files[@]} -gt 0 ]; then
+        validate_files_for_action "dedup" "${files[@]}" || return 1
+    fi
+    audio_dedup "$dir"
+}
+
+run_rename() {
+    local dir="${AUDIO_TOOLS_DIRECTORY:-}"
+    rename_files "$dir"
+}
+
+# ── Main ──
 
 main() {
-    check_needed_dependencies
+    # Check dependencies first
+    check_dependencies
 
-    local action=""
-    local directory=""
-    local threshold=""
-    local query=""
-    local operation=""
-    local force="no"
-    local has_args=false
-
-    if [ "$#" -gt 0 ]; then
-        has_args=true
-    fi
-
-    if [ "$has_args" = false ]; then
-        run_interactive_menu
-        exit 0
-    fi
-
-    while [[ "$#" -gt 0 ]]; do
-        case $1 in
-            -h|--help) show_help; exit 0 ;;
-            -d|--directory) directory="$2"; shift ;;
-            -a|--action) action="$2"; shift ;;
-            -t|--threshold) threshold="$2"; shift ;;
-            -q|--query) query="$2"; shift ;;
-            -o|--operation) operation="$2"; shift ;;
-            -f|--force) force="yes" ;;
-            *) log_error "Unknown parameter passed: $1"; show_help; exit 1 ;;
-        esac
-        shift
-    done
-
-    if [ -z "$action" ]; then
-        log_error "Action is required in batch mode (use --action)."
-        show_help
-        exit 1
-    fi
-
-    case "$action" in
-        convert)
-            convert_to_mp3 "$directory"
-            ;;
-        remove_short)
-            if [ -z "$threshold" ]; then log_error "Threshold is required for remove_short."; exit 1; fi
-            remove_short_audios "$directory" "$threshold" "$force"
-            ;;
-        remove_long)
-            if [ -z "$threshold" ]; then log_error "Threshold is required for remove_long."; exit 1; fi
-            remove_long_audios "$directory" "$threshold" "$force"
-            ;;
-        clean_names)
-            clean_filenames "$directory"
-            ;;
-        scan)
-            scan_audios_subfolders "$directory"
-            ;;
-        search)
-            if [ -z "$query" ]; then log_error "Query is required for search."; exit 1; fi
-            search_and_process_audios "$directory" "$query" "$operation" "$force"
-            ;;
-        *)
-            log_error "Invalid action: $action"
+    # Handle special global flags ONLY if they're the first arg
+    case "${1:-}" in
+        -h|--help)
             show_help
-            exit 1
+            exit 0
+            ;;
+        -V|--version)
+            show_version
+            exit 0
             ;;
     esac
+
+    # Try new dispatcher first (subcommand style)
+    dispatch "$@" && dispatch_status=0 || dispatch_status=$?
+
+    # If dispatch succeeded or returned help/version, we're done
+    if [ $dispatch_status -eq 0 ] || [ $dispatch_status -eq 1 ] || [ $dispatch_status -eq 2 ]; then
+        return $dispatch_status
+    fi
+
+    # No subcommand provided → show interactive menu
+    if [ $dispatch_status -eq 3 ]; then
+        run_interactive_menu
+        return $?
+    fi
+
+    # If dispatch failed with exit code, propagate it
+    if [ $dispatch_status -ne 0 ]; then
+        exit $dispatch_status
+    fi
 }
 
 main "$@"

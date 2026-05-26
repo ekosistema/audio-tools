@@ -1,0 +1,92 @@
+audio-tools v3.0.0 — A Bash Suite for Audio Management
+
+USAGE
+    audio-tools [--help | --version]
+    audio-tools <command> [options] [<file>|<dir> ...]
+
+DESCRIPTION
+    Batch convert, clean, scan, and organize audio files from the
+    terminal. Processes WAV, OGG, FLAC, AAC, WMA, and M4A files
+    via ffmpeg.
+
+CONVERSION
+    convert          WAV/OGG/FLAC/AAC/WMA/M4A -> MP3 (or --format)
+    normalize        EBU R128 loudness normalization
+    trim-silence     Remove silence from start/end of files
+    split-silence    Split audio at silence points
+    concat           Concatenate multiple audio files into one
+
+CLEANUP & ORGANIZE
+    clean-names      Replace spaces with _, strip special chars
+    rename           Batch rename with patterns ({n}, {orig}, {date})
+    scan             Copy all audio from subfolders into one dir
+    remove-short     Trash files shorter than --threshold
+    remove-long      Trash files longer than --threshold
+    dedup            Remove exact duplicates by SHA256
+
+INSPECT & SEARCH
+    info             Show metadata for an audio file
+    stats            Aggregate statistics for a directory
+    list             List files with duration/size/format
+    search           Find files by keyword, delete or extract
+    find-dupes       Find (but keep) exact duplicate files
+
+SHELL
+    completion       Generate shell completion script
+
+GLOBAL OPTIONS
+    -h, --help                Print help information and exit
+    -V, --version             Print version information and exit
+    -d, --directory PATH      Target directory [default: current]
+        --files-from FILE     Read file paths from a file (one per line)
+        --progress            Show compact progress bar [default]
+        --no-progress         Show detailed per-file logs instead
+    -f, --force               Skip all confirmation prompts
+        --no-force            Always ask for confirmation [default]
+        --dry-run             Simulate without modifying files
+    -v, --verbose             Show detailed output [default]
+        --quiet               Suppress info/warn output
+    -t, --threshold SECONDS   Duration threshold for remove
+    -q, --query STRING        Filename keyword for search
+    -o, --operation OP        Operation for search: delete | extract
+        --format FMT          Output format for convert [default: mp3]
+        --bitrate RATE        Audio bitrate [default: 320k]
+        --max-depth N         Max recursion depth [default: unlimited]
+        --pattern PAT         Rename pattern: {n} {orig} {date} {ext}
+
+You may pass one or more files or directories as positional arguments
+after the command. They are auto-detected and processed together with
+--directory (if given). When nothing is specified, defaults to pwd.
+
+ENVIRONMENT
+    AUDIO_TOOLS_FORMAT           Default --format [default: mp3]
+    AUDIO_TOOLS_BITRATE          Default --bitrate [default: 320k]
+    AUDIO_TOOLS_CONVERTED_DIR    Output dir for convert [default: converted_mp3]
+    AUDIO_TOOLS_SCAN_DIR         Output dir for scan [default: ALL_AUDIOS]
+    AUDIO_TOOLS_FORCE            Skip prompts when set to yes
+    AUDIO_TOOLS_QUIET            Suppress output when set to yes
+    AUDIO_TOOLS_CONFIG           Config file path
+    NO_COLOR                     Disable ANSI color output
+
+EXAMPLES
+    audio-tools convert --format flac --bitrate 192k
+    audio-tools convert song.wav
+    audio-tools convert song1.wav song2.wav ./samples
+    audio-tools convert --files-from list.txt --directory ./backup
+    audio-tools info track.flac
+    audio-tools stats ./library
+    audio-tools normalize song.wav
+    audio-tools rename song.wav --pattern '{n}_{orig}' --dry-run
+    audio-tools dedup song1.wav song2.wav --dry-run
+    audio-tools remove-short --threshold 2 --force
+
+EXIT STATUS
+    0    Success
+    64   Usage error
+    69   ffmpeg/ffprobe not found
+    74   I/O error
+
+SEE ALSO
+    ffmpeg(1)    https://ffmpeg.org/
+    ffprobe(1)   https://ffmpeg.org/
+    Project      https://github.com/ekosistema/audio-tools

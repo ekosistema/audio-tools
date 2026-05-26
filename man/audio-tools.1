@@ -1,0 +1,320 @@
+.TH AUDIO-TOOLS 1 "May 2026" "audio-tools v3.0.0" "User Commands"
+.SH NAME
+audio-tools \- convert, clean, normalize, dedup, and organize audio files from the terminal
+.SH SYNOPSIS
+.B audio-tools
+[\fI\,OPTIONS\/\fR]
+.br
+.B audio-tools \fI\,COMMAND\/\fR [\fI\,OPTIONS\/\fR] [\fI\,FILE\/\fR|\fI\,DIR\/\fR ...]
+.SH DESCRIPTION
+.B audio-tools
+batch-processes audio files using ffmpeg.
+It converts WAV, OGG, FLAC, AAC, WMA, and M4A between formats,
+normalizes loudness (EBU R128), trims/splits silence, concatenates
+files, removes short/long recordings, sanitizes filenames, renames
+with patterns, deduplicates by SHA256, consolidates scattered audio
+into one directory, and searches by filename keyword.
+.PP
+When run without arguments,
+.B audio-tools
+starts an interactive menu that guides you through each action: it
+prompts for source directories, output paths, thresholds, and
+confirmation before destructive operations.
+.SH COMMANDS
+.SS "Conversion & Processing"
+.TP
+.B convert
+Convert WAV/OGG/FLAC/AAC/WMA/M4A to MP3 (default), OGG, AAC, or FLAC
+with configurable bitrate. Output directory: converted_mp3
+(configurable via AUDIO_TOOLS_CONVERTED_DIR).
+Options: \fB--format\fR, \fB--bitrate\fR, \fB--output\fR.
+.TP
+.B normalize
+Normalize loudness using EBU R128 standard (\-16 LUFS target).
+Output goes to a \fBprocessed\fR subdirectory.
+.TP
+.B trim-silence
+Remove leading and trailing silence from audio files.
+Output goes to a \fBprocessed\fR subdirectory.
+.TP
+.B split-silence \fI\,FILE\/\fR
+Split a single audio file at silence points into multiple segments.
+Output goes to a \fB{filename}_split\fR directory.
+.TP
+.B concat
+Concatenate multiple audio files in a directory into one file.
+Files are joined in alphabetical order. Output: concatenated.mp3.
+.SS "Cleanup & Organize"
+.TP
+.B clean
+Replace spaces with underscores and strip special characters from
+filenames in the target directory. Operates in place.
+.TP
+.B rename
+Batch rename audio files using pattern tokens:
+\fB{n}\fR (sequential number), \fB{orig}\fR (original name),
+\fB{date}\fR (YYYYMMDD_XXXXXX with random suffix), \fB{ext}\fR (file extension).
+The extension auto-preserves if not included in the pattern.
+Requires: \fB--pattern\fR.
+.TP
+.B scan
+Recursively find all audio files in subdirectories and copy them into a
+single flat directory. Duplicate names are suffixed with _1, _2, etc.
+Output directory: ALL_AUDIOS (configurable via AUDIO_TOOLS_SCAN_DIR).
+.TP
+.B remove \fI\,short\|long\/\fR
+Find audio files shorter/longer than \fB--threshold\fR seconds and
+move them to the system trash. Requires: \fB--threshold\fR.
+Aliases: \fBremove-short\fR, \fBremove-long\fR.
+.TP
+.B dedup
+Find exact duplicates by SHA256 hash and move all but the first file
+to the system trash.
+.SS "Inspect & Search"
+.TP
+.B find-dupes
+Find exact duplicates by SHA256 hash and display groups.
+No files are deleted.
+.TP
+.B list
+List audio files with metadata. Supports output formats:
+\fBtable\fR (default), \fBsimple\fR, \fBtree\fR.
+.TP
+.B stats
+Show aggregate directory statistics: file count, total duration,
+total size, breakdown by format. Supports \fB--json\fR.
+.TP
+.B info
+Display metadata for a single audio file (bitrate, channels,
+sample rate, duration, format). Supports \fB--json\fR.
+.TP
+.B search
+Find audio files whose filename contains \fB--query\fR and either
+delete or extract them. Extract copies to a \fB{query}_extracted\fR
+subdirectory. Requires: \fB--query\fR and \fB--operation\fR
+(delete or extract).
+.SS "Shell & Config"
+.TP
+.B config
+Manage configuration. Subcommands:
+\fBlist\fR, \fBget\fR \fI\,KEY\/\fR, \fBset\fR \fI\,KEY VALUE\/\fR,
+\fBreset\fR, \fBedit\fR (opens $EDITOR), \fBpath\fR (show file path).
+.TP
+.B completion
+Generate shell completion script for \fBbash\fR, \fBzsh\fR, or \fBfish\fR.
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show help message and exit.
+.TP
+.B \-V, \-\-version
+Show version information and exit.
+.TP
+.B \-d, \-\-directory \fI\,PATH\/\fR
+Target directory (default: current directory).
+.TP
+.B \-f, \-\-force
+Skip all confirmation prompts (use with caution).
+.TP
+.B \-t, \-\-threshold \fI\,SECONDS\/\fR
+Duration threshold for
+.B remove
+(subcommands short/long).
+.TP
+.B \-q, \-\-query \fI\,STRING\/\fR
+Filename keyword for
+.BR search .
+.TP
+.B \-o, \-\-operation \fI\,OP\/\fR
+Operation for
+.BR search :
+.B delete
+or
+.BR extract .
+.TP
+.B \-\-format \fI\,FMT\/\fR
+Output format for
+.BR convert
+(mp3/ogg/aac/flac) or
+.BR list
+(table/simple/tree).
+.TP
+.B \-\-bitrate \fI\,RATE\/\fR
+Audio bitrate for convert (default: 320k).
+.TP
+.B \-\-pattern \fI\,PAT\/\fR
+Rename pattern for
+.BR rename :
+tokens {n}, {orig}, {date}, {ext}.
+.TP
+.B \-\-json
+Output results in JSON format.
+.TP
+.B \-\-dry-run
+Simulate operation without modifying files.
+.TP
+.B \-v, \-\-verbose
+Show detailed step-by-step output.
+.TP
+.B \-q, \-\-quiet
+Suppress information and warning output.
+.TP
+.B \-\-no-color
+Disable ANSI colored output.
+.TP
+.B \-C, \-\-config \fI\,FILE\/\fR
+Use custom config file path.
+.TP
+.B \-\-files-from \fI\,FILE\/\fR
+Read file paths from a file (one per line).
+.TP
+.B \-\-max-depth \fI\,N\/\fR
+Maximum recursion depth (default: unlimited).
+.TP
+.B \-\-progress
+Show compact progress bar (default).
+.TP
+.B \-\-no-progress
+Show detailed per-file logs instead.
+.SH ENVIRONMENT
+.TP
+.B AUDIO_TOOLS_CONVERTED_DIR
+Output subdirectory name for
+.BR convert .
+Default: converted_mp3.
+.TP
+.B AUDIO_TOOLS_SCAN_DIR
+Output subdirectory name for
+.BR scan .
+Default: ALL_AUDIOS.
+.TP
+.B AUDIO_TOOLS_FORMAT
+Default output format for convert (default: mp3).
+.TP
+.B AUDIO_TOOLS_BITRATE
+Default audio bitrate for convert (default: 320k).
+.TP
+.B AUDIO_TOOLS_CONFIG
+Path to the configuration file.
+Default: ~/.config/audio-tools/config.sh.
+.TP
+.B AUDIO_TOOLS_FORCE
+Skip all confirmation prompts when set to
+.BR yes .
+.TP
+.B AUDIO_TOOLS_QUIET
+Suppress output when set to
+.BR yes .
+.TP
+.B NO_COLOR
+Disable ANSI color in output when set (any non-empty value).
+.SH FILES
+.TP
+.I ~/.config/audio-tools/config.sh
+Optional configuration file. Plain Bash syntax, sourced at startup.
+Can set any of the environment variables listed above.
+.SH EXIT STATUS
+.TP
+0
+Success.
+.TP
+64
+Usage error (invalid flag, missing required argument).
+.TP
+65
+Data error (bad file).
+.TP
+69
+Service unavailable (ffmpeg or ffprobe not installed).
+.TP
+74
+I/O error (file read or write failure).
+.SH EXAMPLES
+.TP
+Convert all audio in the current directory
+.RS
+.nf
+audio-tools convert
+.fi
+.RE
+.TP
+Convert to FLAC with custom bitrate
+.RS
+.nf
+audio-tools convert --format flac --bitrate 192k ./samples
+.fi
+.RE
+.TP
+Remove files shorter than 2 seconds (non-interactive)
+.RS
+.nf
+audio-tools remove short --threshold 2 --directory ./samples
+.fi
+.RE
+.TP
+Force-delete files longer than 30 seconds
+.RS
+.nf
+audio-tools remove long --threshold 30 --force
+.fi
+.RE
+.TP
+Search for kick drum samples and extract them
+.RS
+.nf
+audio-tools search --query kick --operation extract ./samples
+.fi
+.RE
+.TP
+Normalize loudness (dry run first)
+.RS
+.nf
+audio-tools normalize --dry-run ./library
+.fi
+.RE
+.TP
+Rename files with sequential pattern
+.RS
+.nf
+audio-tools rename --pattern 'track_{n}_{orig}' ./tracks
+.fi
+.RE
+.TP
+Find duplicates
+.RS
+.nf
+audio-tools find-dupes ./audio
+.fi
+.RE
+.TP
+Remove duplicates
+.RS
+.nf
+audio-tools dedup ./audio --force
+.fi
+.RE
+.TP
+Show directory statistics
+.RS
+.nf
+audio-tools stats ./library --json
+.fi
+.RE
+.TP
+Launch the interactive menu
+.RS
+.nf
+audio-tools
+.fi
+.RE
+.SH BUGS
+Report issues at:
+.br
+https://github.com/ekosistema/audio-tools/issues?utm_source=audiotools&utm_medium=man&utm_campaign=bugs
+.SH AUTHOR
+CeleroLab
+.SH SEE ALSO
+.BR ffmpeg (1),
+.BR ffprobe (1)
+.br
+https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=man&utm_campaign=see-also

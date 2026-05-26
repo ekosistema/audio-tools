@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+html/dist/
+
+# Runtime output directories
+converted_mp3/
+processed/
+q/
+ALL_AUDIOS/
+*_split/
+
+# Audio files (prevent accidental commits)
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.aac
+*.wma
+*.m4a
+*.opus
+*.aiff
+*.aif
+*.webm
+
+# Test output artifacts
+tests/fixtures/audio/converted_mp3/
