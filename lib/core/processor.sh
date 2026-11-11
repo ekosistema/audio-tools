@@ -102,7 +102,7 @@ audio_split_silence() {
         local seg_name; seg_name=$(printf "${name}_segment_%04d.${ext}" "$idx")
         log_info "  [$idx/$total_segments] Extracting ${start}s - ${seg_end}s"
         run_media_tool ffmpeg -v error -i "$file" \
-            -ss "$start" -to "$seg_end" -ar 44100 -ac 2 \
+            -ss "$start" -to "$seg_end" \
             "${outdir}/${seg_name}"
         start="$seg_end"
         idx=$((idx + 1))
@@ -111,7 +111,7 @@ audio_split_silence() {
     local last_name; last_name=$(printf "${name}_segment_%04d.${ext}" "$idx")
     log_info "  [$idx/$total_segments] Extracting ${start}s - end"
     run_media_tool ffmpeg -v error -i "$file" \
-        -ss "$start" -ar 44100 -ac 2 \
+        -ss "$start" \
         "${outdir}/${last_name}"
 
     log_info "Split $basename into ${total_segments} segment(s) in $outdir"

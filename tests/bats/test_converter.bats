@@ -52,3 +52,35 @@ teardown() {
         -of default=noprint_wrappers=1:nokey=1 "$TEMP_DIR/converted_mp3/short.mp3")
     [[ -n "$duration" ]]
 }
+
+# ── Sample rate / channel preservation ──
+
+_probe() { ffprobe -v error -select_streams a:0 -show_entries "stream=$2" -of default=noprint_wrappers=1:nokey=1 "$1" | tr -d '\r'; }
+
+@test "convert to flac preserves a 96 kHz source sample rate" {
+    mkdir -p "$TEMP_DIR/hires"
+    ffmpeg -v error -f lavfi -i "sine=frequency=440:sample_rate=96000:duration=0.5" "$TEMP_DIR/hires/tone.wav"
+    AUDIO_TOOLS_FORMAT=flac run convert_to_mp3 "$TEMP_DIR/hires"
+    [ "$status" -eq 0 ]
+    [ "$(_probe "$TEMP_DIR/hires/converted_mp3/tone.flac" sample_rate)" = "96000" ]
+}
+
+@test "convert to mp3 caps a 96 kHz source at 48 kHz" {
+    mkdir -p "$TEMP_DIR/hires"
+    ffmpeg -v error -f lavfi -i "sine=frequency=440:sample_rate=96000:duration=0.5" "$TEMP_DIR/hires/tone.wav"
+    run convert_to_mp3 "$TEMP_DIR/hires"
+    [ "$status" -eq 0 ]
+    [ "$(_probe "$TEMP_DIR/hires/converted_mp3/tone.mp3" sample_rate)" = "48000" ]
+}
+
+@test "convert to mp3 keeps mono sources mono" {
+    run convert_to_mp3 "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ "$(_probe "$TEMP_DIR/converted_mp3/medium.mp3" channels)" = "1" ]
+}
+
+@test "AUDIO_TOOLS_SAMPLE_RATE overrides the preserved rate" {
+    AUDIO_TOOLS_SAMPLE_RATE=22050 run convert_to_mp3 "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ "$(_probe "$TEMP_DIR/converted_mp3/medium.mp3" sample_rate)" = "22050" ]
+}
