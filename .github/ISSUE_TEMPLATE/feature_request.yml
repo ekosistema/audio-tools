@@ -1,0 +1,46 @@
+name: 💡 Feature request
+description: Suggest an idea or an improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome! Start with the problem you are trying to solve; the solution can come later.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      placeholder: "I often have to ... and today I do it by hand with ..."
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like audio-tools to do?
+      description: A sketch of the command or flag is perfect.
+      render: shell
+      placeholder: |
+        audio-tools tag-rename ~/Music --pattern '{artist} - {title}'
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+  - type: dropdown
+    id: help
+    attributes:
+      label: Would you like to work on it?
+      options:
+        - "Yes, I can send a pull request"
+        - "Maybe, with some guidance"
+        - "No, I am just suggesting"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Reminder: audio-tools never deletes for good, asks before destroying, and treats `--dry-run` as a
+        promise ([safety model](https://github.com/ekosistema/audio-tools/blob/main/docs/safety.md)).
+        Ideas that fit those rules are the easiest to accept.

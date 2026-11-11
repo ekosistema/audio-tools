@@ -1,0 +1,72 @@
+name: 🐛 Bug report
+description: Something does not work the way the docs say it should
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! The more exact the steps, the faster we can fix it.
+
+        **Lost or overwritten data, or a command running from a crafted file name?** Please do not file it
+        here. Follow [SECURITY.md](https://github.com/ekosistema/audio-tools/blob/main/SECURITY.md) instead.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: And what did you expect to happen instead?
+      placeholder: "I ran `audio-tools dedup` and expected X, but got Y."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands, ideally on a tiny folder. `--dry-run` output is very helpful.
+      render: shell
+      placeholder: |
+        mkdir demo && cp a.wav "demo/a b.wav"
+        audio-tools list demo --format table
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Paste the full output (add `--verbose` and `--no-color` if you can).
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: audio-tools version
+      description: Output of `audio-tools --version`
+      placeholder: audio-tools v3.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows (WSL)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: bash
+    attributes:
+      label: Bash and ffmpeg versions
+      description: Output of `bash --version | head -1` and `ffmpeg -version | head -1`
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues
+          required: true
+        - label: I am using the latest release (or `main`)
+          required: false

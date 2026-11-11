@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Report a security vulnerability
+    url: https://github.com/ekosistema/audio-tools/security/advisories/new
+    about: Data-loss or command-injection problems must be reported privately, not as a public issue.
+  - name: 📖 Read the docs first
+    url: https://github.com/ekosistema/audio-tools#readme
+    about: The README, the safety model and the architecture notes answer most questions.
