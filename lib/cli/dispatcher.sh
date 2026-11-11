@@ -73,6 +73,30 @@ parse_global_flags() {
         esac
     done
 
+    # Global flags are also accepted AFTER the subcommand (`audio-tools convert --dry-run`),
+    # as most CLIs do. Only the unambiguous long forms are hoisted; short flags mean
+    # different things per command (-f is --force globally but --format for convert).
+    # Everything after a bare `--` is left untouched.
+    if [ -n "$AUDIO_TOOLS_SUBCOMMAND" ]; then
+        local -a rest=()
+        local arg after_dd=no
+        for arg in "$@"; do
+            if [ "$after_dd" = "yes" ]; then rest+=("$arg"); continue; fi
+            case "$arg" in
+                --)         after_dd=yes; rest+=("$arg") ;;
+                --dry-run)  AUDIO_TOOLS_DRY_RUN="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --json)     AUDIO_TOOLS_JSON="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --no-color) AUDIO_TOOLS_NO_COLOR="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --quiet)    AUDIO_TOOLS_QUIET="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --verbose)  AUDIO_TOOLS_VERBOSE="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --force)    AUDIO_TOOLS_FORCE="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --no-force) AUDIO_TOOLS_FORCE="no"; parsed_count=$((parsed_count + 1)) ;;
+                *)          rest+=("$arg") ;;
+            esac
+        done
+        set -- "${rest[@]+"${rest[@]}"}"
+    fi
+
     AUDIO_TOOLS_REMAINING_ARGS=("$@")
     AUDIO_TOOLS_PARSE_COUNT="$parsed_count"
 

@@ -159,3 +159,52 @@ teardown() {
     run shellcheck -x bin/audio-tools lib/*/*.sh lib/cli/*/*.sh
     [ "$status" -eq 0 ]
 }
+
+# ── Global flags after the subcommand ──
+
+@test "global --dry-run is accepted after the subcommand (convert)" {
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    run bash bin/audio-tools convert --dry-run "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -qi "dry run"
+    [ ! -e "$TEMP_DIR/converted_mp3/short.mp3" ]
+}
+
+@test "global --dry-run is accepted after the subcommand (remove short)" {
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    run bash bin/audio-tools remove short --threshold 2 --dry-run "$TEMP_DIR" < /dev/null
+    [ "$status" -eq 0 ]
+    [ -f "$TEMP_DIR/short.wav" ]
+}
+
+@test "global --json is accepted after the subcommand (list)" {
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    run --separate-stderr bash bin/audio-tools list "$TEMP_DIR" --json
+    [ "$status" -eq 0 ]
+    echo "$output" | grep -q '"files"'
+}
+
+@test "global --force is accepted after the subcommand (skips the confirmation)" {
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    mkdir -p "$TEMP_DIR/stubs" && printf '#!/bin/sh\nexit 1\n' > "$TEMP_DIR/stubs/gio" \
+        && cp "$TEMP_DIR/stubs/gio" "$TEMP_DIR/stubs/trash-put" && chmod +x "$TEMP_DIR"/stubs/*
+    XDG_DATA_HOME="$TEMP_DIR/xdg" PATH="$TEMP_DIR/stubs:$PATH" run bash bin/audio-tools remove short -t 2 "$TEMP_DIR" --force < /dev/null
+    [ "$status" -eq 0 ]
+    [ ! -e "$TEMP_DIR/short.wav" ]
+}
+
+@test "flags after a bare -- are never treated as global flags" {
+    # Hoisted, --json would switch list to JSON output; after `--` it must stay untouched
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    run bash bin/audio-tools list "$TEMP_DIR" -- --json
+    [ "$status" -eq 0 ]
+    ! echo "$output" | grep -q '"files"'
+    echo "$output" | grep -q "short.wav"
+}
+
+@test "short flags keep their per-command meaning (-f is --format for convert)" {
+    cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
+    run bash bin/audio-tools convert -f flac "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ -f "$TEMP_DIR/converted_mp3/short.flac" ]
+}

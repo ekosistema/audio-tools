@@ -87,7 +87,7 @@ audio_stats() {
         [ -n "$fname" ] && format_counts[$fname]=$(( ${format_counts[$fname]:-0} + 1))
         update_progress "$(basename "$file")"
     done
-    finish_progress 0 0 ""
+    finish_progress "$total" 0 "analyzed $total file(s)"
 
     local dur_min=$((total_duration / 60)) dur_sec=$((total_duration % 60))
     local size_mb; size_mb=$(echo "$total_size" | awk '{printf "%.1f", $1/1048576}' 2>/dev/null || echo "0")
@@ -136,7 +136,7 @@ audio_list() {
         printf "  %-35s %2dm%02ds %6sK %-6s %-8s %-6s\n" "$(basename "$file")" "$min" "$sec" "$size_kb" "$fname" "$br" "$codec"
         update_progress "$(basename "$file")"
     done
-    finish_progress 0 0 ""
+    finish_progress "$total" 0 "metadata read"
     echo ""
     log_info "Total: $total file(s)"
 }
