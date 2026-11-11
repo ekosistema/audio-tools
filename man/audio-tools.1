@@ -1,4 +1,4 @@
-.TH AUDIO-TOOLS 1 "May 2026" "audio-tools v3.0.0" "User Commands"
+.TH AUDIO-TOOLS 1 "November 2026" "audio-tools v3.1.0" "User Commands"
 .SH NAME
 audio-tools \- convert, clean, normalize, dedup, and organize audio files from the terminal
 .SH SYNOPSIS
@@ -27,6 +27,9 @@ confirmation before destructive operations.
 Convert WAV/OGG/FLAC/AAC/WMA/M4A to MP3 (default), OGG, AAC, or FLAC
 with configurable bitrate. Output directory: converted_mp3
 (configurable via AUDIO_TOOLS_CONVERTED_DIR).
+The source sample rate and channel count are preserved (MP3 output is
+capped at 48 kHz and 2 channels, AAC at 96 kHz); override with
+AUDIO_TOOLS_SAMPLE_RATE and AUDIO_TOOLS_CHANNELS.
 Options: \fB--format\fR, \fB--bitrate\fR, \fB--output\fR.
 .TP
 .B normalize
@@ -69,7 +72,8 @@ Aliases: \fBremove-short\fR, \fBremove-long\fR.
 .TP
 .B dedup
 Find exact duplicates by SHA256 hash and move all but the first file
-to the system trash.
+(the one whose path sorts first) to the system trash. Asks for
+confirmation unless \fB--force\fR is given; \fB--dry-run\fR only reports.
 .SS "Inspect & Search"
 .TP
 .B find-dupes
@@ -206,6 +210,13 @@ Skip all confirmation prompts when set to
 Suppress output when set to
 .BR yes .
 .TP
+.B AUDIO_TOOLS_SAMPLE_RATE
+Force the output sample rate in Hz for convert, normalize and trim-silence
+(default: keep the source rate).
+.TP
+.B AUDIO_TOOLS_CHANNELS
+Force the number of output channels (default: keep the source layout).
+.TP
 .B NO_COLOR
 Disable ANSI color in output when set (any non-empty value).
 .SH FILES
@@ -213,6 +224,22 @@ Disable ANSI color in output when set (any non-empty value).
 .I ~/.config/audio-tools/config.sh
 Optional configuration file. Plain Bash syntax, sourced at startup.
 Can set any of the environment variables listed above.
+.SH SAFETY
+Nothing is ever deleted permanently. Every destructive operation moves files
+to the system trash: on macOS \fB~/.Trash\fR; on Linux and WSL \fBgio trash\fR,
+then \fBtrash-put\fR, then the FreeDesktop trash in
+\fB~/.local/share/Trash\fR (with a \fB.trashinfo\fR so files stay restorable);
+otherwise a local \fBto_delete\fR directory. A file never overwrites another of
+the same name in the trash.
+.PP
+Destructive commands ask for confirmation unless \fB--force\fR is given;
+\fB--quiet\fR does not skip the question. With no input available (closed
+standard input) they exit with status 64 instead of guessing.
+.B --dry-run
+never moves, converts or deletes anything.
+Outputs of convert, normalize and trim-silence are written to a temporary
+\fB.part\fR file and renamed only on success, so a failed run leaves no
+truncated file.
 .SH EXIT STATUS
 .TP
 0

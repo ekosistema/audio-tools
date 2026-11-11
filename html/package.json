@@ -1,6 +1,6 @@
 {
   "name": "audio-tools-landing",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Marketing landing page for Audio Tools — a Bash suite for audio management.",
   "scripts": {
     "dev": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",

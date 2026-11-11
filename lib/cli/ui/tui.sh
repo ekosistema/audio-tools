@@ -10,14 +10,23 @@ fi
 CURSOR_HIDE="\033[?25l"
 CURSOR_SHOW="\033[?25h"
 
+# Print "║ <text centered in 62 columns> ║"
+_tui_banner_line() {
+    local text="$1" width=62
+    local left=$(( (width - ${#text}) / 2 ))
+    local right=$(( width - ${#text} - left ))
+    printf '║%*s%s%*s║\n' "$left" "" "$text" "$right" ""
+}
+
 show_main_menu() {
+    # The version comes from the VERSION file so the banner can never go stale
+    local version
+    version=$(cat "$(dirname "${BASH_SOURCE[0]}")/../../../VERSION" 2>/dev/null || echo "unknown")
     clear
-    cat << 'EOF'
-╔══════════════════════════════════════════════════════════════╗
-║                    Audio Tools v3.0.0                        ║
-║         Batch process audio files with confidence            ║
-╚══════════════════════════════════════════════════════════════╝
-EOF
+    echo "╔══════════════════════════════════════════════════════════════╗"
+    _tui_banner_line "Audio Tools v${version}"
+    _tui_banner_line "Batch process audio files with confidence"
+    echo "╚══════════════════════════════════════════════════════════════╝"
     echo ""
     styled_echo "$BOLD" "CONVERSION & PROCESSING"
     echo "  1)  Convert audio (any format → mp3/ogg/aac/flac)"
