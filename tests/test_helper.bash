@@ -50,9 +50,14 @@ setup_temp_dir() {
         TEMP_DIR="$PROJECT_ROOT/.tmp_test.$$.$RANDOM"
         mkdir -p "$TEMP_DIR"
     fi
+    # Sandbox HOME: on macOS move_to_trash writes to ~/.Trash, which must never be the real one
+    TEST_HOME="${TEMP_DIR}-home"
+    mkdir -p "$TEST_HOME"
+    export HOME="$TEST_HOME"
 }
 
 teardown_temp_dir() {
+    [ -n "${TEST_HOME:-}" ] && [ -d "$TEST_HOME" ] && rm -rf "$TEST_HOME"
     [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ] && rm -rf "$TEMP_DIR"
 }
 

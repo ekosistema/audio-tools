@@ -21,8 +21,13 @@ teardown() {
     teardown_temp_dir
 }
 
-# A file is "gone" from LIB and shows up in the sandboxed trash or to_delete/
-_trashed() { [ ! -e "$LIB/$1" ] && { [ -e "$XDG_DATA_HOME/Trash/files/$1" ] || [ -e "$LIB/to_delete/$1" ]; }; }
+# A file is "gone" from LIB and shows up in the sandboxed trash (FreeDesktop on Linux,
+# ~/.Trash on macOS, where HOME is sandboxed by setup_temp_dir) or in to_delete/
+_trashed() {
+    [ ! -e "$LIB/$1" ] && {
+        [ -e "$XDG_DATA_HOME/Trash/files/$1" ] || [ -e "$HOME/.Trash/$1" ] || [ -e "$LIB/to_delete/$1" ]
+    }
+}
 
 @test "dedup moves exact duplicates to the trash and keeps the first file" {
     run bash bin/audio-tools --force dedup "$LIB"
