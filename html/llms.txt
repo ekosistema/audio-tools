@@ -1,0 +1,18 @@
+# Audio Tools
+
+> Audio Tools is a free, open-source command-line tool (Bash + ffmpeg) that batch converts, normalizes, renames and de-duplicates audio files. Every change can be previewed with --dry-run, destructive commands ask for confirmation, and removed files go to the trash. Runs on Linux, macOS and Windows (via WSL). MIT license, version 3.1.0, by CeleroLab.
+
+## Key facts
+
+- 18 commands: convert, normalize, trim-silence, split-silence, concat, clean, rename, scan, remove-short, remove-long, dedup, find-dupes, list, stats, info, search, config, completion.
+- Reads WAV, OGG, FLAC, AAC, WMA and M4A. Saves as MP3, WAV, OGG, AAC (M4A) or FLAC.
+- Safe by default: --dry-run previews, confirmation before deleting (only --force skips it), removed files go to the system trash, and it stops with exit status 64 when nobody can answer a prompt.
+- Requires Bash 4.0+ and ffmpeg (the installer adds ffmpeg). Free, no account, no tracking.
+
+## Links
+
+- [Website](https://audiotools.celerolab.com/): overview, install steps and FAQ
+- [Source code and README](https://github.com/ekosistema/audio-tools): install instructions and usage
+- [Safety model](https://github.com/ekosistema/audio-tools/blob/main/docs/safety.md): how deletion, trash and --dry-run work
+- [Architecture](https://github.com/ekosistema/audio-tools/blob/main/docs/architecture.md): how the code is organized
+- [Changelog](https://github.com/ekosistema/audio-tools/blob/main/CHANGELOG.md): what changed in each release

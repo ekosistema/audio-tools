@@ -1,9 +1,6 @@
 # Dependencies
 node_modules/
 
-# Build outputs
-html/dist/
-
 # Runtime output directories
 converted_mp3/
 processed/

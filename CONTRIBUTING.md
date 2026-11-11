@@ -104,7 +104,7 @@ bats -f "dry-run" tests/bats/        # tests whose name matches
 1. Pick the version ([SemVer](https://semver.org/)): fixes only is a patch, new backwards-compatible behavior is a
    minor, a breaking change is a major.
 2. Update **`VERSION`**, the version badge in `README.md`, the `.TH` line of `man/audio-tools.1`,
-   `html/package.json` and the version strings in `html/index.html`, and `tests/golden/help.txt`.
+   the version strings in `html/index.html`, and `tests/golden/help.txt`.
 3. Move the `[Unreleased]` notes in `CHANGELOG.md` under the new version with its date.
 4. Run the full suite, then tag: `git tag -a vX.Y.Z -m "audio-tools vX.Y.Z"` and push the tag.
 5. Create a GitHub release from the tag, pasting the changelog section.

@@ -1,746 +1,673 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Tools v3 — Convert, Normalize, Dedup & Organize Audio from the Terminal</title>
-    <meta name="description" content="Batch convert WAV/OGG/FLAC/AAC/WMA/M4A to any format, normalize loudness (EBU R128), trim silence, concatenate, dedup by SHA256, rename with patterns, and organize audio libraries — all from your terminal.">
-    <meta name="keywords" content="audio converter, bash, ffmpeg, batch convert, mp3, wav to mp3, flac to mp3, audio organizer, sample manager, terminal audio tool, audio normalization, loudness normalization, audio deduplication">
-    <meta name="author" content="CeleroLab">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Tools: batch convert, dedupe and organize audio files</title>
+<meta name="description" content="Free tool to batch convert, rename and de-duplicate audio files. Preview every change; removed files go to the trash. Linux, Mac, Windows (WSL).">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="color-scheme" content="dark light">
+<meta name="author" content="CeleroLab">
+<link rel="canonical" href="https://audiotools.celerolab.com/">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<link rel="manifest" href="site.webmanifest">
+<meta name="theme-color" content="#0ea5e9">
 
-    <meta property="og:title" content="Audio Tools — Master Your Audio Library from the Terminal">
-    <meta property="og:description" content="Batch convert, normalize, dedup, rename, and organize thousands of audio files in one command. Free & open-source.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://github.com/ekosistema/audio-tools">
-    <meta property="og:image" content="https://raw.githubusercontent.com/ekosistema/audio-tools/main/html/favicon.svg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Audio Tools">
+<meta property="og:title" content="Audio Tools: tidy thousands of audio files, lose none">
+<meta property="og:description" content="Convert, clean, rename and de-duplicate audio in one go. Preview first, confirm before deleting, restore from the trash.">
+<meta property="og:url" content="https://audiotools.celerolab.com/">
+<meta property="og:image" content="https://audiotools.celerolab.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Audio Tools: batch process audio files with confidence">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Audio Tools: tidy thousands of audio files, lose none">
+<meta name="twitter:description" content="Convert, clean, rename and de-duplicate audio in one go. Free and open source.">
+<meta name="twitter:image" content="https://audiotools.celerolab.com/og-image.png">
 
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Audio Tools — Master Your Audio Library from the Terminal">
-    <meta name="twitter:description" content="Batch convert, normalize, dedup, rename, and organize thousands of audio files in one command. Free & open-source.">
-
-    <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="alternate icon" href="favicon.svg">
-    <link rel="apple-touch-icon" href="favicon.svg">
-    <link rel="manifest" href="site.webmanifest">
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-
-    <link href="./dist/output.css" rel="stylesheet">
-
-    <link rel="preload" href="./dist/output.css" as="style">
-
-    <script type="application/ld+json">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
     {
-      "@context": "https://schema.org",
       "@type": "SoftwareApplication",
+      "@id": "https://audiotools.celerolab.com/#software",
       "name": "Audio Tools",
-      "version": "3.1.0",
-      "description": "Batch convert, clean, scan, and organize audio files from the terminal.",
+      "alternateName": "audio-tools",
+      "description": "A free, open-source command-line tool that batch converts, normalizes, renames and de-duplicates audio files. Removed files go to the trash.",
+      "url": "https://audiotools.celerolab.com/",
+      "downloadUrl": "https://github.com/ekosistema/audio-tools",
+      "softwareVersion": "3.1.0",
       "applicationCategory": "MultimediaApplication",
-      "operatingSystem": "Linux, macOS, Windows (WSL)",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Organization",
-        "name": "CeleroLab",
-        "url": "https://celerolab.com"
-      }
+      "operatingSystem": "Linux, macOS, Windows (via WSL)",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "image": "https://audiotools.celerolab.com/og-image.png",
+      "featureList": [
+        "Convert WAV, OGG, FLAC, AAC, WMA and M4A to MP3, WAV, OGG, AAC or FLAC",
+        "Loudness normalization (EBU R128, -16 LUFS)",
+        "Find and remove exact duplicates by SHA256",
+        "Batch rename with patterns",
+        "Trim and split silence, concatenate files",
+        "Preview any change with --dry-run",
+        "Removed files go to the trash"
+      ],
+      "author": { "@type": "Organization", "name": "CeleroLab", "url": "https://celerolab.com" }
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is Audio Tools?", "acceptedAnswer": { "@type": "Answer", "text": "Audio Tools is a free, open-source command-line tool for batch converting, normalizing, renaming and de-duplicating audio files. It runs on Linux, macOS and Windows (via WSL) and uses ffmpeg." } },
+        { "@type": "Question", "name": "Could I lose my files by accident?", "acceptedAnswer": { "@type": "Answer", "text": "It is built to prevent that. Removed files go to the trash, it asks before deleting, and the --dry-run option previews any action without changing a file." } },
+        { "@type": "Question", "name": "Where do removed files go?", "acceptedAnswer": { "@type": "Answer", "text": "To your system trash: the Trash on macOS, or the trash on Linux and WSL. If none is available, to a to_delete folder next to the files. On WSL this is not the Windows Recycle Bin." } },
+        { "@type": "Question", "name": "Which audio formats does it support?", "acceptedAnswer": { "@type": "Answer", "text": "It reads WAV, OGG, FLAC, AAC, WMA and M4A, and saves as MP3, WAV, OGG, AAC (M4A) or FLAC." } },
+        { "@type": "Question", "name": "Does Audio Tools work on Windows?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, through WSL, a free Microsoft feature that runs Linux programs inside Windows." } },
+        { "@type": "Question", "name": "Do I need to be a programmer?", "acceptedAnswer": { "@type": "Answer", "text": "No. Run audio-tools on its own and pick from a menu, or paste one-line commands." } },
+        { "@type": "Question", "name": "Is Audio Tools free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. It is released under the MIT license, with no account and no tracking." } }
+      ]
     }
-    </script>
+  ]
+}
+</script>
 
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .mono { font-family: 'Fira Code', monospace; }
-        .glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .gradient-text {
-            background: linear-gradient(90deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .skip-link {
-            position: absolute;
-            top: -100%;
-            left: 1rem;
-            z-index: 100;
-            padding: 0.5rem 1rem;
-            background: #0ea5e9;
-            color: #fff;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: top 0.2s;
-        }
-        .skip-link:focus {
-            top: 1rem;
-        }
-        .cursor-blink {
-            animation: blink 1s step-end infinite;
-        }
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-            .cursor-blink { animation: none; opacity: 1; }
-            .scroll-smooth { scroll-behavior: auto; }
-            .motion-safe-only { animation: none !important; transition: none !important; }
-        }
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-    </style>
+<style>
+:root{
+  --bg:#020617; --bg-2:#0b1220; --surface:#0f172a; --surface-2:#162033;
+  --line:#26334a; --text:#e2e8f0; --muted:#a3b1c6; --heading:#f8fafc;
+  --accent:#38bdf8; --accent-ink:#04202e; --accent-2:#818cf8;
+  --ok:#34d399; --warn:#fbbf24; --focus:#fde047;
+  --code-bg:#050b18; --radius:14px; --maxw:1120px;
+  --font:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"Fira Code",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root{
+    --bg:#f8fafc; --bg-2:#eef2f7; --surface:#ffffff; --surface-2:#f1f5f9;
+    --line:#cbd5e1; --text:#1e293b; --muted:#475569; --heading:#0f172a;
+    --accent:#0369a1; --accent-ink:#ffffff; --accent-2:#4338ca;
+    --ok:#047857; --warn:#92400e; --focus:#1d4ed8; --code-bg:#0f172a;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:5.5rem}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.6 var(--font);-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-underline-offset:3px}
+code,pre{font-family:var(--mono)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:6px}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 clamp(16px,4vw,32px)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:12px;top:-60px;background:var(--accent);color:var(--accent-ink);padding:.6rem 1rem;border-radius:8px;font-weight:700;z-index:100;transition:top .15s}
+.skip:focus{top:12px}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+
+/* Header */
+header.site{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.bar{display:flex;align-items:center;gap:1rem;min-height:64px}
+.brand{display:flex;align-items:center;gap:.6rem;color:var(--heading);font-weight:800;font-size:1.15rem;text-decoration:none;margin-right:auto}
+.brand .logo{width:32px;height:32px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.brand small{font:600 .75rem var(--mono);color:var(--muted);border:1px solid var(--line);padding:.1rem .45rem;border-radius:999px}
+nav.primary ul{display:flex;gap:.25rem;list-style:none;margin:0;padding:0}
+nav.primary a{display:inline-flex;align-items:center;min-height:44px;padding:0 .8rem;color:var(--muted);text-decoration:none;border-radius:8px;font-weight:500;font-size:.95rem}
+nav.primary a:hover{color:var(--heading);background:var(--surface-2)}
+nav.primary a[aria-current="true"]{color:var(--heading);box-shadow:inset 0 -3px 0 var(--accent);border-radius:8px 8px 0 0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;min-height:44px;padding:0 1.3rem;border-radius:999px;font-weight:700;font-size:.95rem;text-decoration:none;border:1px solid transparent;cursor:pointer;font-family:inherit;transition:transform .1s,filter .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--heading);border-color:var(--line)}
+.btn-ghost:hover{background:var(--surface-2)}
+.menu-toggle{display:none;min-width:44px;min-height:44px;background:transparent;border:1px solid var(--line);border-radius:10px;color:var(--heading);cursor:pointer;align-items:center;justify-content:center}
+@media (max-width:860px){
+  .menu-toggle{display:inline-flex}
+  nav.primary{display:none;position:absolute;left:0;right:0;top:64px;background:var(--bg);border-bottom:1px solid var(--line);padding:.5rem clamp(16px,4vw,32px) 1rem}
+  nav.primary.open{display:block}
+  nav.primary ul{flex-direction:column}
+  nav.primary a{width:100%}
+  .bar .btn-primary.hide-sm{display:none}
+}
+
+/* Sections */
+section{padding:clamp(48px,7vw,80px) 0}
+section.alt{background:var(--bg-2);border-block:1px solid var(--line)}
+.eyebrow{font:600 .8rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 .5rem}
+h1,h2,h3{color:var(--heading);line-height:1.15;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.6rem);font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+h2{text-wrap:balance}
+h2{font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;letter-spacing:-.01em;margin-bottom:1.5rem}
+h3{font-size:1.05rem;font-weight:700}
+.lead{font-size:clamp(1.05rem,1.5vw,1.18rem);color:var(--muted);max-width:56ch;margin:0}
+.grad{background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;color:transparent}
+@media (forced-colors:active){.grad{color:CanvasText;background:none}}
+.inline{background:var(--surface-2);border:1px solid var(--line);padding:.05rem .4rem;border-radius:6px;font-size:.85em;color:var(--heading);white-space:nowrap}
+.ico{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--surface-2);color:var(--accent);flex:none}
+
+/* Hero */
+.hero{padding-top:clamp(36px,6vw,72px)}
+.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:clamp(28px,5vw,56px);align-items:center}
+.hero-grid>*{min-width:0}
+.hero .lead{margin:1.1rem 0 1.5rem}
+.cta{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1.4rem}
+.trust{display:flex;flex-direction:column;gap:.4rem;list-style:none;margin:0;padding:0;color:var(--muted);font-size:.93rem}
+.trust li{display:flex;align-items:center;gap:.5rem}
+.trust svg{color:var(--ok);flex:none}
+@media (max-width:900px){.hero-grid{grid-template-columns:1fr}}
+
+/* Terminal */
+.term{background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 20px 50px -20px rgba(0,0,0,.6);margin:0}
+.term-top{display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem;border-bottom:1px solid var(--line);background:rgba(255,255,255,.03);font:.78rem var(--mono);color:#a3b1c6}
+.term-top i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.term pre{margin:0;padding:1rem 1.1rem;overflow-x:auto;font-size:.84rem;line-height:1.7;color:#cbd5e1}
+.term .p{color:#94a3b8}.term .c{color:#6ee7b7}.term .i{color:#38bdf8}.term .w{color:#fbbf24}.term .d{color:#94a3b8}
+.term-note{padding:.65rem 1.1rem;border-top:1px solid var(--line);font-size:.85rem;color:#a3b1c6;background:rgba(255,255,255,.02)}
+
+
+/* Terminal animation */
+.term-top{justify-content:flex-start}
+.term-top .dots{display:inline-flex;gap:.5rem}
+.term-top .term-title{margin-left:.3rem}
+.term pre.anim{display:block;height:calc(14 * 1.7em + 2rem);overflow:hidden}
+.term pre.sr-only{padding:0;overflow:hidden;position:absolute;width:1px;height:1px;border:0}
+.ln{display:block;min-height:1.7em;white-space:pre-wrap;flex:none}
+.ln.hid{display:none}
+.cur{display:inline-block;width:.55em;height:1.05em;background:#38bdf8;vertical-align:-.15em;margin-left:1px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* Facts strip */
+.facts{padding:0}
+.facts ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden;transform:translateY(-50%);margin-bottom:-2.2rem}
+.facts li{padding:1.1rem 1.25rem;border-left:1px solid var(--line);display:flex;flex-direction:column;gap:.1rem}
+.facts li:first-child{border-left:0}
+.facts strong{font-size:1.7rem;font-weight:800;color:var(--heading);line-height:1.1}
+.facts span{color:var(--muted);font-size:.9rem}
+@media (max-width:900px){.facts ul{transform:none;margin:0 0 1rem}.facts{padding-top:1.5rem}}
+@media (max-width:760px){.facts ul{grid-template-columns:repeat(2,1fr)}.facts li:nth-child(3){border-left:0}.facts li:nth-child(n+3){border-top:1px solid var(--line)}}
+
+
+/* Guardrails */
+.guard{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;list-style:none;margin:0;padding:0}
+.guard li{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:1.25rem}
+.guard .ico{margin-bottom:.9rem}
+.guard h3{margin-bottom:.3rem}
+.guard p{margin:0;color:var(--muted);font-size:.95rem}
+@media (max-width:900px){.guard{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.guard{grid-template-columns:1fr}}
+
+/* Recipes */
+.rlist{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);overflow:hidden}
+.rrow{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.3fr);gap:.5rem 1rem;align-items:center;padding:.6rem 1rem;border-top:1px solid var(--line)}
+.rrow:first-child{border-top:0}
+.rrow .ico{width:36px;height:36px;border-radius:10px}
+.rrow h3{font-size:.98rem;display:flex;flex-wrap:wrap;align-items:center;gap:.15rem .6rem}
+.tag{display:inline-block;font:700 .64rem var(--font);letter-spacing:.05em;text-transform:uppercase;padding:.05rem .5rem;border-radius:999px;border:1px solid currentColor}
+.tag.safe{color:var(--ok)}.tag.ask{color:var(--warn)}.tag.read{color:var(--accent)}
+@media (max-width:760px){.rrow{grid-template-columns:auto minmax(0,1fr)}.rrow .cmd{grid-column:1 / -1}}
+
+/* Command box */
+.cmd{display:flex;align-items:stretch;min-width:0;max-width:100%;background:var(--code-bg);border:1px solid var(--line);border-radius:10px;margin:.5rem 0}
+.rrow .cmd{margin:0}
+.cmd code{flex:1;min-width:0;padding:.65rem .9rem;color:#7dd3fc;font-size:.84rem;white-space:pre-wrap;overflow-wrap:break-word}
+.cmd .copy{flex:none;min-width:76px;display:flex;align-items:center;justify-content:center;background:transparent;border:0;border-left:1px solid var(--line);color:#cbd5e1;font:600 .82rem var(--font);cursor:pointer;border-radius:0 10px 10px 0}
+.cmd .copy:hover{background:rgba(255,255,255,.07)}
+.cmd .copy[data-done=true]{color:#6ee7b7}
+
+/* Tabs */
+.tabs [role=tablist]{display:flex;gap:.25rem;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs [role=tab]{min-height:44px;padding:0 1rem;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);font:600 .95rem var(--font);cursor:pointer;white-space:nowrap}
+.tabs [role=tab]:hover{color:var(--heading)}
+.tabs [role=tab][aria-selected=true]{color:var(--heading);border-bottom-color:var(--accent)}
+.tabs [role=tabpanel]{padding-top:1rem}
+.tabs [role=tabpanel] p{color:var(--muted);margin:.5rem 0 0;font-size:.95rem}
+.tabs [role=tabpanel] p strong{color:var(--heading)}
+.count{display:inline-grid;place-items:center;min-width:1.4rem;height:1.4rem;padding:0 .35rem;margin-left:.3rem;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-size:.72rem;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;list-style:none;margin:1.5rem 0 0;padding:0}
+.chips li{display:inline-flex;align-items:center;gap:.4rem;padding:.35rem .8rem;border:1px solid var(--line);background:var(--surface);border-radius:999px;font-size:.88rem;color:var(--muted)}
+.chips svg{color:var(--ok)}
+
+/* Command list */
+.cmd-tabs [role=tabpanel]{padding-top:0;border:1px solid var(--line);border-top:0;border-radius:0 0 var(--radius) var(--radius);background:var(--surface)}
+.clist{list-style:none;margin:0;padding:0}
+.clist li{display:grid;grid-template-columns:9rem minmax(0,1fr);gap:.75rem;align-items:baseline;padding:.55rem 1rem;border-top:1px solid var(--line)}
+.clist li:first-child{border-top:0}
+.cn{color:var(--heading);font-weight:600;font-size:.88rem;white-space:nowrap}
+.cd{font-size:.92rem}
+.cf code{font-size:.72rem;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);padding:0 .35rem;border-radius:5px;margin-left:.25rem}
+@media (max-width:560px){.clist li{grid-template-columns:1fr;gap:.1rem}}
+
+/* FAQ */
+.faq{max-width:820px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:.6rem}
+details[open]{border-color:var(--accent)}
+summary{list-style:none;cursor:pointer;min-height:52px;padding:.8rem 1.2rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;font-weight:600;color:var(--heading);border-radius:12px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";width:10px;height:10px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s;flex:none;margin-right:.25rem}
+details[open] summary::after{transform:rotate(-135deg)}
+details .a{padding:0 1.2rem 1rem;color:var(--muted)}
+details .a p{margin:0}
+
+
+/* Closing + footer */
+.closing{text-align:center;background:var(--bg-2);border-top:1px solid var(--line)}
+.closing h2{margin-bottom:.6rem}
+.closing .lead{margin:0 auto 1.4rem}
+.closing .cta{justify-content:center;margin-bottom:0}
+footer{border-top:1px solid var(--line);padding:2rem 0;color:var(--muted);font-size:.92rem}
+.foot{display:flex;flex-wrap:wrap;gap:1rem 3rem;justify-content:space-between}
+footer ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.25rem 1.25rem}
+footer a{display:inline-flex;min-height:32px;align-items:center;color:var(--muted)}
+footer a:hover{color:var(--heading)}
+.live{position:absolute;width:1px;height:1px;overflow:hidden}
+@media (max-width:600px){
+  .term pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}
+  .cmd code{font-size:.8rem}
+  .rrow{padding:.7rem .8rem}
+}
+@media (max-width:440px){
+  .tabs [role=tab]{padding:0 .7rem;font-size:.9rem}
+  .count{display:none}
+  .btn{width:100%}
+  .cta{flex-direction:column}
+  .closing .cta{align-items:stretch}
+}.nb{white-space:nowrap}
+</style>
 </head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
 
-<body class="bg-slate-950 text-slate-200 selection:bg-sky-500/30">
-
-    <a href="#main-content" class="skip-link">Skip to content</a>
-
-    <nav class="fixed w-full top-0 z-50 px-4 sm:px-6 py-4" role="navigation" aria-label="Main navigation">
-        <div class="max-w-7xl mx-auto flex justify-between items-center glass rounded-2xl px-4 sm:px-6 py-3">
-            <a href="#" class="flex items-center gap-2 focus-visible:outline-sky-400" aria-label="Audio Tools home">
-                <div class="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center shadow-lg shadow-sky-500/20 flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                    </svg>
-                </div>
-                <span class="font-bold text-xl tracking-tight">AudioTools <span class="text-sky-500 text-sm">v3.1.0</span></span>
-            </a>
-
-            <div class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
-                <a href="#features" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400">Features</a>
-                <a href="#actions" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400">Actions</a>
-                <a href="#how-it-works" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400">How It Works</a>
-                <a href="#faq" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400">FAQ</a>
-                <a href="https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=web&utm_campaign=nav" target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400" aria-label="View on GitHub">
-                    GitHub
-                </a>
-            </div>
-
-            <div class="flex items-center gap-3">
-                <a href="#install" class="hidden sm:inline-flex bg-white text-slate-950 px-5 py-2 rounded-full text-sm font-bold hover:bg-sky-400 transition-all focus-visible:outline-sky-400 active:scale-95">Install Now</a>
-
-                <button id="hamburger" class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-sky-400" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="mobile-menu">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <div id="mobile-menu" class="md:hidden hidden mt-2 glass rounded-2xl px-4 py-3 text-sm font-medium text-slate-400" role="menu" aria-label="Mobile navigation">
-            <a href="#features" class="block px-3 py-2 rounded-lg hover:bg-white/5 hover:text-sky-400 transition-colors" role="menuitem" tabindex="-1">Features</a>
-            <a href="#actions" class="block px-3 py-2 rounded-lg hover:bg-white/5 hover:text-sky-400 transition-colors" role="menuitem" tabindex="-1">Actions</a>
-            <a href="#how-it-works" class="block px-3 py-2 rounded-lg hover:bg-white/5 hover:text-sky-400 transition-colors" role="menuitem" tabindex="-1">How It Works</a>
-            <a href="#faq" class="block px-3 py-2 rounded-lg hover:bg-white/5 hover:text-sky-400 transition-colors" role="menuitem" tabindex="-1">FAQ</a>
-            <a href="https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=web&utm_campaign=nav-mobile" target="_blank" rel="noopener noreferrer" class="block px-3 py-2 rounded-lg hover:bg-white/5 hover:text-sky-400 transition-colors" role="menuitem" tabindex="-1">GitHub</a>
-            <a href="#install" class="block px-3 py-2 mt-1 bg-white/10 text-white rounded-lg hover:bg-sky-500/20 hover:text-sky-400 transition-colors text-center" role="menuitem" tabindex="-1">Install Now</a>
-        </div>
+<header class="site">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Audio Tools, back to top">
+      <span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19V6l12-3v13M9 19a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm12-3a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></svg></span>
+      Audio Tools <small>v3.1.0</small>
+    </a>
+    <nav class="primary" id="site-nav" aria-label="Main">
+      <ul>
+        <li><a href="#safety">Safety</a></li>
+        <li><a href="#use">What it does</a></li>
+        <li><a href="#install">Install</a></li>
+        <li><a href="#commands">Commands</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="https://github.com/ekosistema/audio-tools" rel="noopener">GitHub<span class="sr-only"> (opens in a new tab)</span></a></li>
+      </ul>
     </nav>
+    <a class="btn btn-primary hide-sm" href="#install">Install</a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <span class="sr-only">Menu</span>
+    </button>
+  </div>
+</header>
 
-    <main id="main-content">
+<main id="main">
 
-        <section class="relative pt-36 pb-20 px-4 sm:px-6 overflow-hidden" aria-label="Hero">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-sky-500/10 blur-[120px] rounded-full -z-10 motion-safe-only" aria-hidden="true"></div>
-            <div class="max-w-5xl mx-auto text-center">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 bg-sky-500/10 border border-sky-500/20 rounded-full text-sky-400 text-xs sm:text-sm font-medium mb-8">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75 motion-safe-only"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
-                    </span>
-                    v3.1.0 — Free & open-source
-                </div>
+<!-- HERO -->
+<section class="hero" id="top" aria-labelledby="h-hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Free · Open source</p>
+      <h1 id="h-hero">Tidy thousands of audio files. <span class="grad">Lose none.</span></h1>
+      <p class="lead"><strong>Audio Tools</strong> is a free command-line tool that converts, cleans, renames and de-duplicates audio files, and sends anything it removes to the trash.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#install">Install Audio Tools</a>
+        <a class="btn btn-ghost" href="#use">See what it does</a>
+      </div>
+      <ul class="trust" aria-label="Key facts">
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Linux, Mac and Windows (via WSL)</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>No coding: use a menu or short commands</li>
+        <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>No account, no tracking</li>
+      </ul>
+    </div>
 
-                <h1 class="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 tracking-tight leading-tight">
-                    Convert, clean, and organize<br>
-                    <span class="gradient-text">thousands of audio files</span><br>
-                    in one command.
-                </h1>
+    <figure class="term" id="term">
+      <div class="term-top">
+        <span class="dots" aria-hidden="true"><i style="background:#f87171"></i><i style="background:#fbbf24"></i><i style="background:#34d399"></i></span>
+        <span class="term-title" aria-hidden="true">bash — ~/samples</span>
+      </div>
+      <pre class="sr-only">$ audio-tools list --format table
+FILENAME             FORMAT  SIZE   DURATION
+───────────────────  ──────  ─────  ────────
+ambient pad.wav      wav     861KB  10s
+click.wav            wav     25KB   0s
+kick one (copy).wav  wav     258KB  3s
+kick one.wav         wav     258KB  3s
+Total: 4 items
 
-                <p class="text-base sm:text-lg md:text-xl text-slate-400 mb-10 max-w-3xl mx-auto leading-relaxed">
-                    Stop wrestling with messy sample libraries. Audio Tools batch-converts
-                    <strong class="text-slate-300">WAV, OGG, FLAC, AAC, WMA, and M4A</strong> between formats,
-                    normalizes loudness, deduplicates by SHA256, renames with patterns, trims silence,
-                    and consolidates scattered folders — all from your terminal.
-                </p>
+$ audio-tools remove-short -t 2 --dry-run
+  would move to trash: ./click.wav
+[INFO] [dry run] Would delete 1 short files
 
-                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-                    <a href="#install" class="bg-white text-slate-950 px-8 py-3.5 rounded-full text-base font-bold hover:bg-sky-400 transition-all active:scale-95 focus-visible:outline-sky-400 shadow-xl shadow-sky-500/10">
-                        Install in 30 seconds
-                    </a>
-                    <a href="https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=web&utm_campaign=hero" target="_blank" rel="noopener noreferrer" class="glass px-8 py-3.5 rounded-full text-base font-semibold hover:bg-slate-800/80 transition-all focus-visible:outline-sky-400 active:scale-95">
-                        View on GitHub
-                    </a>
-                </div>
+$ audio-tools dedup --dry-run
+── Duplicate group ──
+  keep:      ./kick one (copy).wav
+  duplicate: ./kick one.wav
+  would move to trash: ./kick one.wav
+[INFO] [dry run] Would delete 1 duplicate file(s)
 
-                <div class="max-w-3xl mx-auto glass rounded-xl overflow-hidden shadow-2xl border-slate-700/50">
-                    <div class="bg-slate-800/50 px-4 py-2 flex items-center gap-2 border-b border-slate-700/50">
-                        <div class="flex gap-1.5" aria-hidden="true">
-                            <div class="w-3 h-3 rounded-full bg-red-500/50"></div>
-                            <div class="w-3 h-3 rounded-full bg-amber-500/50"></div>
-                            <div class="w-3 h-3 rounded-full bg-emerald-500/50"></div>
-                        </div>
-                        <span class="text-xs text-slate-500 mono ml-2 italic">bash — audio-tools</span>
-                    </div>
-                    <div class="p-4 sm:p-6 text-left mono text-xs sm:text-sm md:text-base space-y-2" aria-label="Terminal demo">
-                        <div id="terminal-lines" class="space-y-2">
-                            <p class="text-emerald-400" id="typing-line">
-                                <span class="text-slate-500">$</span> <span id="typed-text"></span><span id="cursor" class="text-sky-400 cursor-blink">▎</span>
-                            </p>
-                            <div id="terminal-output" class="hidden space-y-2">
-                                <p class="text-slate-400"><span class="text-sky-500">[INFO]</span> Scanning ./samples...</p>
-                                <p class="text-slate-400"><span class="text-sky-500">[INFO]</span> Found 124 files.</p>
-                                <p class="text-sky-400"><span class="text-emerald-400">→</span> kick_01.wav → mp3... <span class="text-emerald-400">OK</span></p>
-                                <p class="text-sky-400"><span class="text-emerald-400">→</span> snare_rev.flac → mp3... <span class="text-emerald-400">OK</span></p>
-                                <p class="text-sky-400"><span class="text-emerald-400">→</span> vox_take.aac → mp3... <span class="text-emerald-400">OK</span></p>
-                                <p class="text-sky-400"><span class="text-emerald-400">→</span> normalize 2 files to −16 LUFS... <span class="text-emerald-400">OK</span></p>
-                                <p class="text-sky-400"><span class="text-emerald-400">→</span> dedup 3 duplicates trashed... <span class="text-emerald-400">OK</span></p>
-                                <p class="text-emerald-400"><span class="font-bold">[SUCCESS]</span> Batch processing complete.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+$ audio-tools dedup
+Move 1 duplicate file(s) to the trash? (yes/no): yes
+[INFO] Deleted 1 duplicate file(s)</pre>
+      <pre class="anim" id="term-anim" aria-hidden="true"><span class="ln"><span class="p">$</span> <span class="c" data-type>audio-tools list --format table</span></span><span class="ln">FILENAME             FORMAT  SIZE   DURATION</span><span class="ln">───────────────────  ──────  ─────  ────────</span><span class="ln">ambient pad.wav      wav     861KB  10s</span><span class="ln">click.wav            wav     25KB   0s</span><span class="ln">kick one (copy).wav  wav     258KB  3s</span><span class="ln">kick one.wav         wav     258KB  3s</span><span class="ln">Total: 4 items</span><span class="ln">&nbsp;</span><span class="ln"><span class="p">$</span> <span class="c" data-type>audio-tools remove-short -t 2 --dry-run</span></span><span class="ln">  would move to trash: ./click.wav</span><span class="ln"><span class="i">[INFO]</span> [dry run] Would delete 1 short files</span><span class="ln">&nbsp;</span><span class="ln"><span class="p">$</span> <span class="c" data-type>audio-tools dedup --dry-run</span></span><span class="ln"><span class="w">── Duplicate group ──</span></span><span class="ln">  keep:      ./kick one (copy).wav</span><span class="ln">  duplicate: ./kick one.wav</span><span class="ln">  would move to trash: ./kick one.wav</span><span class="ln"><span class="i">[INFO]</span> [dry run] Would delete 1 duplicate file(s)</span><span class="ln">&nbsp;</span><span class="ln"><span class="p">$</span> <span class="c" data-type>audio-tools dedup</span></span><span class="ln">Move 1 duplicate file(s) to the trash? <span class="d">(yes/no):</span> <span data-type>yes</span></span><span class="ln"><span class="i">[INFO]</span> Deleted 1 duplicate file(s)</span></pre>
+      <figcaption class="term-note">Preview first, then do it. The file is safe in the trash.</figcaption>
+    </figure>
+  </div>
+</section>
 
+<!-- FACTS -->
+<div class="facts">
+  <div class="wrap">
+    <ul aria-label="Audio Tools at a glance">
+      <li><strong>18</strong><span>commands</span></li>
+      <li><strong>6 → 5</strong><span>formats in → out</span></li>
+      <li><strong>3</strong><span>systems: Linux, Mac, Windows</span></li>
+      <li><strong>MIT</strong><span>free and open source</span></li>
+    </ul>
+  </div>
+</div>
 
+<!-- SAFETY -->
+<section id="safety" aria-labelledby="h-safety">
+  <div class="wrap">
+    <p class="eyebrow">Safety</p>
+    <h2 id="h-safety">Built so a slip never costs you a file</h2>
+    <ul class="guard">
+      <li><span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><h3>Preview</h3><p><code class="inline">--dry-run</code> shows what would change. Nothing is touched.</p></li>
+      <li><span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg></span><h3>Confirm</h3><p>It asks before deleting. Only <code class="inline">--force</code> skips the question.</p></li>
+      <li><span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></span><h3>Trash</h3><p>Removed files go to the trash. Restore them any time.</p></li>
+      <li><span class="ico" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg></span><h3>Stop</h3><p>Nobody to answer? It stops instead of guessing.</p></li>
+    </ul>
+  </div>
+</section>
 
-        <section id="how-it-works" class="py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto" aria-label="How It Works">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Zero setup. Instant results.</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">Three commands — or zero if you just run the interactive menu.</p>
-            </div>
+<!-- WHAT IT DOES -->
+<section class="alt" id="use" aria-labelledby="h-use">
+  <div class="wrap">
+    <p class="eyebrow">What it does</p>
+    <h2 id="h-use">Pick a job, copy the command</h2>
+    <ul class="rlist">
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+        <h3>See what is in a folder <span class="tag read">Just looking</span></h3>
+        <div class="cmd"><code>audio-tools stats ./library</code><button class="copy" type="button" data-copy="audio-tools stats ./library">Copy<span class="sr-only"> stats command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M3 21v-5h5"/></svg></span>
+        <h3>Convert to another format <span class="tag safe">Makes copies</span></h3>
+        <div class="cmd"><code>audio-tools convert ./samples --format mp3</code><button class="copy" type="button" data-copy="audio-tools convert ./samples --format mp3">Copy<span class="sr-only"> convert command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4zM15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg></span>
+        <h3>Even out the volume <span class="tag safe">Makes copies</span></h3>
+        <div class="cmd"><code>audio-tools normalize ./samples</code><button class="copy" type="button" data-copy="audio-tools normalize ./samples">Copy<span class="sr-only"> normalize command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></svg></span>
+        <h3>Find duplicates <span class="tag read">Just looking</span></h3>
+        <div class="cmd"><code>audio-tools find-dupes</code><button class="copy" type="button" data-copy="audio-tools find-dupes">Copy<span class="sr-only"> find-dupes command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4L8.1 15.9M14.5 14.5L20 20M8.1 8.1L12 12"/></svg></span>
+        <h3>Clear out tiny clips <span class="tag ask">Asks first</span></h3>
+        <div class="cmd"><code>audio-tools remove-short --threshold 2 --dry-run</code><button class="copy" type="button" data-copy="audio-tools remove-short --threshold 2 --dry-run">Copy<span class="sr-only"> remove-short command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg></span>
+        <h3>Rename in bulk <span class="tag ask">Renames</span></h3>
+        <div class="cmd"><code>audio-tools rename --pattern '{n}_{orig}' --dry-run</code><button class="copy" type="button" data-copy="audio-tools rename --pattern '{n}_{orig}' --dry-run">Copy<span class="sr-only"> rename command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg></span>
+        <h3>Feed other tools <span class="tag read">Advanced</span></h3>
+        <div class="cmd"><code>audio-tools list --json</code><button class="copy" type="button" data-copy="audio-tools list --json">Copy<span class="sr-only"> JSON list command</span></button></div></li>
+      <li class="rrow"><span class="ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>
+        <h3>Prefer a menu? <span class="tag read">Easiest</span></h3>
+        <div class="cmd"><code>audio-tools</code><button class="copy" type="button" data-copy="audio-tools">Copy<span class="sr-only"> menu command</span></button></div></li>
+    </ul>
+  </div>
+</section>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="glass p-8 rounded-3xl text-center group hover:border-sky-500/50 transition-all">
-                    <div class="w-14 h-14 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-sky-400 text-2xl font-bold" aria-hidden="true">1</div>
-                    <h3 class="text-xl font-bold mb-3">Install</h3>
-                    <p class="text-slate-400 mono text-sm">git clone &amp;&amp; ./install.sh</p>
-                    <p class="text-slate-500 text-sm mt-3">The installer detects your OS and fetches ffmpeg if needed.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center group hover:border-sky-500/50 transition-all">
-                    <div class="w-14 h-14 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-sky-400 text-2xl font-bold" aria-hidden="true">2</div>
-                    <h3 class="text-xl font-bold mb-3">Run</h3>
-                    <p class="text-slate-400 mono text-sm">audio-tools</p>
-                    <p class="text-slate-500 text-sm mt-3">No arguments? The interactive menu guides you step by step.</p>
-                </div>
-                <div class="glass p-8 rounded-3xl text-center group hover:border-sky-500/50 transition-all">
-                    <div class="w-14 h-14 bg-sky-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-sky-400 text-2xl font-bold" aria-hidden="true">3</div>
-                    <h3 class="text-xl font-bold mb-3">Done</h3>
-                    <p class="text-slate-400 mono text-sm">audio-tools convert ./samples</p>
-                    <p class="text-slate-500 text-sm mt-3">Your library is converted, normalized, deduped, and organized. Ship it.</p>
-                </div>
-            </div>
-        </section>
+<!-- INSTALL -->
+<section id="install" aria-labelledby="h-install">
+  <div class="wrap">
+    <p class="eyebrow">Install</p>
+    <h2 id="h-install">Get it running</h2>
+    <div class="tabs" data-tabs>
+      <div role="tablist" aria-label="Operating system">
+        <button role="tab" id="t-linux" aria-controls="p-linux" aria-selected="true">Linux</button>
+        <button role="tab" id="t-mac" aria-controls="p-mac" aria-selected="false" tabindex="-1">macOS</button>
+        <button role="tab" id="t-win" aria-controls="p-win" aria-selected="false" tabindex="-1">Windows</button>
+      </div>
+      <div role="tabpanel" id="p-linux" aria-labelledby="t-linux" tabindex="0">
+        <p><strong>1. Install</strong></p>
+        <div class="cmd"><code>git clone https://github.com/ekosistema/audio-tools.git
+cd audio-tools &amp;&amp; ./install.sh</code><button class="copy" type="button" data-copy="git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh">Copy<span class="sr-only"> install command for Linux</span></button></div>
+        <p><strong>2. Check</strong></p>
+        <div class="cmd"><code>source ~/.bashrc &amp;&amp; audio-tools --version</code><button class="copy" type="button" data-copy="source ~/.bashrc && audio-tools --version">Copy<span class="sr-only"> check command</span></button></div>
+      </div>
+      <div role="tabpanel" id="p-mac" aria-labelledby="t-mac" tabindex="0" hidden>
+        <p><strong>1. Update Bash</strong> (your Mac's is too old)</p>
+        <div class="cmd"><code>brew install bash</code><button class="copy" type="button" data-copy="brew install bash">Copy<span class="sr-only"> Homebrew command</span></button></div>
+        <p><strong>2. Install</strong></p>
+        <div class="cmd"><code>git clone https://github.com/ekosistema/audio-tools.git
+cd audio-tools &amp;&amp; ./install.sh</code><button class="copy" type="button" data-copy="git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh">Copy<span class="sr-only"> install command for macOS</span></button></div>
+        <p><strong>3. Check</strong></p>
+        <div class="cmd"><code>source ~/.zshrc &amp;&amp; audio-tools --version</code><button class="copy" type="button" data-copy="source ~/.zshrc && audio-tools --version">Copy<span class="sr-only"> check command</span></button></div>
+      </div>
+      <div role="tabpanel" id="p-win" aria-labelledby="t-win" tabindex="0" hidden>
+        <p><strong>1. Install WSL</strong> if you don't have it (PowerShell as administrator, then restart)</p>
+        <div class="cmd"><code>wsl --install</code><button class="copy" type="button" data-copy="wsl --install">Copy<span class="sr-only"> WSL install command</span></button></div>
+        <p><strong>2. Open Ubuntu and install</strong></p>
+        <div class="cmd"><code>git clone https://github.com/ekosistema/audio-tools.git
+cd audio-tools &amp;&amp; ./install.sh</code><button class="copy" type="button" data-copy="git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh">Copy<span class="sr-only"> install command for WSL</span></button></div>
+        <p><strong>3. Check</strong> (your Windows drives are in <code class="inline">/mnt/c</code>)</p>
+        <div class="cmd"><code>source ~/.bashrc &amp;&amp; audio-tools --version</code><button class="copy" type="button" data-copy="source ~/.bashrc && audio-tools --version">Copy<span class="sr-only"> check command</span></button></div>
+      </div>
+    </div>
+    <ul class="chips" aria-label="Requirements">
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Bash 4+</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>ffmpeg (installed for you)</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>No account</li>
+    </ul>
+  </div>
+</section>
 
-        <section id="features" class="py-20 sm:py-28 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 rounded-3xl" aria-label="Features">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Everything you need to tame your audio library</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">Six actions. One CLI. No bloat.</p>
-            </div>
+<!-- COMMANDS -->
+<section class="alt" id="commands" aria-labelledby="h-cmd">
+  <div class="wrap">
+    <p class="eyebrow">Reference</p>
+    <h2 id="h-cmd">All 18 commands</h2>
+    <div class="tabs cmd-tabs" data-tabs>
+      <div role="tablist" aria-label="Command groups">
+        <button role="tab" id="tc-convert" aria-controls="pc-convert" aria-selected="true">Change audio <span class="count">5</span></button>
+        <button role="tab" id="tc-clean" aria-controls="pc-clean" aria-selected="false" tabindex="-1">Tidy up <span class="count">6</span></button>
+        <button role="tab" id="tc-inspect" aria-controls="pc-inspect" aria-selected="false" tabindex="-1">Look around <span class="count">7</span></button>
+      </div>
+      <div role="tabpanel" id="pc-convert" aria-labelledby="tc-convert" tabindex="0">
+        <ul class="clist" aria-label="Commands that change audio">
+          <li><code class="cn">convert</code><span class="cd">Change format <span class="cf"><code>--format</code><code>--bitrate</code></span></span></li>
+          <li><code class="cn">normalize</code><span class="cd">Even out the volume</span></li>
+          <li><code class="cn">trim-silence</code><span class="cd">Cut silence at the start and end</span></li>
+          <li><code class="cn">split-silence</code><span class="cd">Cut a recording at every silence</span></li>
+          <li><code class="cn">concat</code><span class="cd">Join files into one</span></li>
+        </ul>
+      </div>
+      <div role="tabpanel" id="pc-clean" aria-labelledby="tc-clean" tabindex="0" hidden>
+        <ul class="clist" aria-label="Commands that tidy up files">
+          <li><code class="cn">clean</code><span class="cd">Tidy file names</span></li>
+          <li><code class="cn">rename</code><span class="cd">Rename many files at once <span class="cf"><code>--pattern</code></span></span></li>
+          <li><code class="cn">scan</code><span class="cd">Gather audio from subfolders <span class="cf"><code>--max-depth</code></span></span></li>
+          <li><code class="cn">remove-short</code><span class="cd">Trash very short clips <span class="cf"><code>--threshold</code></span></span></li>
+          <li><code class="cn">remove-long</code><span class="cd">Trash very long files <span class="cf"><code>--threshold</code></span></span></li>
+          <li><code class="cn">dedup</code><span class="cd">Trash exact duplicates</span></li>
+        </ul>
+      </div>
+      <div role="tabpanel" id="pc-inspect" aria-labelledby="tc-inspect" tabindex="0" hidden>
+        <ul class="clist" aria-label="Commands that look around">
+          <li><code class="cn">find-dupes</code><span class="cd">Show duplicates, remove nothing</span></li>
+          <li><code class="cn">list</code><span class="cd">List files with length and size <span class="cf"><code>--json</code></span></span></li>
+          <li><code class="cn">stats</code><span class="cd">Quick summary of a folder</span></li>
+          <li><code class="cn">info</code><span class="cd">Details of one file</span></li>
+          <li><code class="cn">search</code><span class="cd">Find by name, then trash or copy <span class="cf"><code>--query</code><code>--operation</code></span></span></li>
+          <li><code class="cn">config</code><span class="cd">View or change settings</span></li>
+          <li><code class="cn">completion</code><span class="cd">Tab-completion for your terminal</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md:col-span-2 glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all">
-                    <div class="bg-sky-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">17 Commands, One Tool</h3>
-                    <p class="text-slate-400">Convert, normalize, trim silence, concat, clean, rename, dedup, scan, remove, list, stats, info, search, config — every audio management task covered with a single command.</p>
-                    <div class="flex flex-wrap gap-2 mt-4">
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono text-sky-400">convert</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono text-teal-400">normalize</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono text-amber-400">remove</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono text-emerald-400">dedup</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono text-purple-400">stats</span>
-                    </div>
-                </div>
+<!-- FAQ -->
+<section id="faq" aria-labelledby="h-faq">
+  <div class="wrap faq">
+    <p class="eyebrow">FAQ</p>
+    <h2 id="h-faq">Quick answers</h2>
+    <details><summary>What is Audio Tools?</summary><div class="a"><p>Audio Tools is a free, open-source command-line tool for batch converting, normalizing, renaming and de-duplicating audio files. It runs on Linux, macOS and Windows (via WSL) and uses ffmpeg.</p></div></details>
+    <details><summary>Could I lose my files by accident?</summary><div class="a"><p>It is built to prevent that. Removed files go to the trash, it asks before deleting, and the <code class="inline">--dry-run</code> option previews any action without changing a file.</p></div></details>
+    <details><summary>Where do removed files go?</summary><div class="a"><p>To your system trash: the Trash on macOS, or the trash on Linux and WSL. If none is available, to a <code class="inline">to_delete</code> folder next to the files. On WSL this is not the Windows Recycle Bin.</p></div></details>
+    <details><summary>Which audio formats does it support?</summary><div class="a"><p>It reads WAV, OGG, FLAC, AAC, WMA and M4A, and saves as MP3, WAV, OGG, AAC (M4A) or FLAC.</p></div></details>
+    <details><summary>Does Audio Tools work on Windows?</summary><div class="a"><p>Yes, through WSL, a free Microsoft feature that runs Linux programs inside Windows. The Windows tab in <a href="#install">Install</a> shows the steps.</p></div></details>
+    <details><summary>Do I need to be a programmer?</summary><div class="a"><p>No. Run <code class="inline">audio-tools</code> on its own and pick from a menu, or paste one-line commands.</p></div></details>
+    <details><summary>Is Audio Tools free?</summary><div class="a"><p>Yes. It is released under the MIT license, with no account and no tracking.</p></div></details>
+  </div>
+</section>
 
-                <div class="glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all">
-                    <div class="bg-emerald-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Strict & Safe</h3>
-                    <p class="text-slate-400">No data loss. All destructive operations funnel through the system trash. You always get a second chance.</p>
-                </div>
+<section class="closing" aria-labelledby="h-close">
+  <div class="wrap">
+    <h2 id="h-close">Ready to tidy up your library?</h2>
+    <p class="lead">Free. No account. Preview before anything changes.</p>
+    <div class="cta"><a class="btn btn-primary" href="#install">Install Audio Tools</a><a class="btn btn-ghost" href="https://github.com/ekosistema/audio-tools">View on GitHub<span class="sr-only"> (opens in a new tab)</span></a></div>
+  </div>
+</section>
 
-                <div class="glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all">
-                    <div class="bg-amber-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Lightning Fast</h3>
-                    <p class="text-slate-400">Pure Bash. Zero bloat. Minimal dependencies. Processes thousands of files in seconds.</p>
-                </div>
+</main>
 
-                <div class="md:col-span-2 glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all flex flex-col md:flex-row gap-8 items-center">
-                    <div class="flex-1">
-                        <h3 class="text-2xl font-bold mb-2">Hybrid Interface</h3>
-                        <p class="text-slate-400">Choose your workflow: a guided <strong>Interactive Menu</strong> for casual use, or a robust <strong>Batch Mode</strong> with CLI flags for automation scripts and CI pipelines.</p>
-                    </div>
-                    <div class="flex gap-2 flex-wrap justify-center">
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono">--format flac</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono">--dry-run</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono">--pattern '{n}_{orig}'</span>
-                        <span class="px-3 py-1 bg-slate-800 rounded text-xs mono">--json</span>
-                    </div>
-                </div>
+<footer>
+  <div class="wrap foot">
+    <div>
+      <p style="margin:0 0 .3rem;color:var(--heading);font-weight:700">Audio Tools <span style="font-weight:400;color:var(--muted)">v3.1.0</span></p>
+      <p style="margin:0">By <a href="https://celerolab.com">CeleroLab</a> · <a href="https://github.com/ekosistema/audio-tools/blob/main/LICENSE">MIT License</a></p>
+    </div>
+    <nav aria-label="Project links">
+      <ul>
+        <li><a href="https://github.com/ekosistema/audio-tools">GitHub</a></li>
+        <li><a href="https://github.com/ekosistema/audio-tools/blob/main/CHANGELOG.md">Changelog</a></li>
+        <li><a href="https://github.com/ekosistema/audio-tools/blob/main/docs/safety.md">Safety</a></li>
+        <li><a href="https://github.com/ekosistema/audio-tools/blob/main/CONTRIBUTING.md">Contributing</a></li>
+        <li><a href="https://github.com/ekosistema/audio-tools/blob/main/SECURITY.md">Security</a></li>
+      </ul>
+    </nav>
+  </div>
+</footer>
 
-                <div class="md:col-span-2 glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all">
-                    <div class="bg-sky-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Cross-Platform</h3>
-                    <p class="text-slate-400">Runs on <strong class="text-slate-300">Linux</strong>, <strong class="text-slate-300">macOS</strong>, and <strong class="text-slate-300">Windows</strong> via WSL. The installer detects your OS and configures everything automatically.</p>
-                </div>
+<div class="live" id="copy-live" role="status" aria-live="polite"></div>
 
-                <div class="glass p-8 rounded-3xl group hover:border-sky-500/50 transition-all">
-                    <div class="bg-purple-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-2">Configurable</h3>
-                    <p class="text-slate-400">CLI flags, env vars, or config file — choose your flavor. Supports <code class="mono text-xs">--json</code> output, <code class="mono text-xs">--dry-run</code> previews, and <code class="mono text-xs">--force</code> for automation. Priority: <strong class="text-slate-300">flags > env > config</strong>.</p>
-                </div>
-            </div>
-        </section>
+<script>
+(function () {
+  var toggle = document.querySelector('.menu-toggle'), nav = document.getElementById('site-nav');
+  toggle.addEventListener('click', function () {
+    var open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  nav.addEventListener('click', function (e) {
+    if (e.target.closest('a')) { nav.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && nav.classList.contains('open')) {
+      nav.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); toggle.focus();
+    }
+  });
 
-        <section id="actions" class="py-20 sm:py-28 px-4 sm:px-6 max-w-6xl mx-auto" aria-label="All Actions">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">One CLI to rule them all</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">Every command works in both interactive and batch mode. Plug them into Makefiles, CI scripts, or cron jobs.</p>
-            </div>
-
-            <div class="glass rounded-2xl overflow-hidden border border-white/5">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm sm:text-base">
-                        <thead>
-                            <tr class="border-b border-white/10 bg-slate-800/50">
-                                <th class="text-left px-6 py-4 font-semibold text-slate-300" scope="col">Command</th>
-                                <th class="text-left px-6 py-4 font-semibold text-slate-300" scope="col">Description</th>
-                                <th class="text-left px-6 py-4 font-semibold text-slate-300 hidden md:table-cell" scope="col">Key Flags</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-white/5">
-
-                            <tr class="bg-slate-800/30">
-                                <td colspan="3" class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Conversion &amp; Processing</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-sky-400">convert</code></td>
-                                <td class="px-6 py-4 text-slate-400">WAV/OGG/FLAC/AAC/WMA/M4A → MP3/OGG/AAC/FLAC with configurable bitrate</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell"><code class="mono text-xs">--format</code> <code class="mono text-xs">--bitrate</code></td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-teal-400">normalize</code></td>
-                                <td class="px-6 py-4 text-slate-400">EBU R128 loudness normalization (−16 LUFS target)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-teal-400">trim-silence</code></td>
-                                <td class="px-6 py-4 text-slate-400">Remove leading and trailing silence from audio files</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-teal-400">concat</code></td>
-                                <td class="px-6 py-4 text-slate-400">Concatenate multiple audio files into one (alphabetical order)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-teal-400">split-silence</code></td>
-                                <td class="px-6 py-4 text-slate-400">Split a single audio file at silence points into segments</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-
-                            <tr class="bg-slate-800/30">
-                                <td colspan="3" class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cleanup &amp; Organize</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-emerald-400">clean</code></td>
-                                <td class="px-6 py-4 text-slate-400">Replace spaces with underscores, strip special characters</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-emerald-400">rename</code></td>
-                                <td class="px-6 py-4 text-slate-400">Batch rename with patterns: <code class="mono text-xs">{n}</code> <code class="mono text-xs">{orig}</code> <code class="mono text-xs">{date}</code> <code class="mono text-xs">{ext}</code></td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell"><code class="mono text-xs">--pattern</code></td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-sky-400">scan</code></td>
-                                <td class="px-6 py-4 text-slate-400">Consolidate all audio from subfolders into one flat directory</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-amber-400">remove</code></td>
-                                <td class="px-6 py-4 text-slate-400">Remove short/long files by duration condition via system trash</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell"><code class="mono text-xs">--threshold</code></td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-red-400">dedup</code></td>
-                                <td class="px-6 py-4 text-slate-400">Remove exact duplicates by SHA256 (keep first, trash rest)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-red-400">find-dupes</code></td>
-                                <td class="px-6 py-4 text-slate-400">Find exact duplicates by SHA256 (list only, no deletion)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-
-                            <tr class="bg-slate-800/30">
-                                <td colspan="3" class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Inspect &amp; Search</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-purple-400">list</code></td>
-                                <td class="px-6 py-4 text-slate-400">List audio files with metadata (table/simple/tree views)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell"><code class="mono text-xs">--format</code></td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-purple-400">stats</code></td>
-                                <td class="px-6 py-4 text-slate-400">Aggregate directory statistics: count, duration, size, format breakdown</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-purple-400">info</code></td>
-                                <td class="px-6 py-4 text-slate-400">Show audio file metadata (bitrate, channels, sample rate, duration)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-purple-400">search</code></td>
-                                <td class="px-6 py-4 text-slate-400">Find files by keyword, then delete or extract to folder</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell"><code class="mono text-xs">--query</code> <code class="mono text-xs">--operation</code></td>
-                            </tr>
-
-                            <tr class="bg-slate-800/30">
-                                <td colspan="3" class="px-6 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">Shell &amp; Config</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-slate-400">config</code></td>
-                                <td class="px-6 py-4 text-slate-400">Manage settings: get, set, list, edit, reset, path</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                            <tr class="hover:bg-white/[0.02] transition-colors">
-                                <td class="px-6 py-4"><code class="mono text-slate-400">completion</code></td>
-                                <td class="px-6 py-4 text-slate-400">Generate shell completion (bash/zsh/fish)</td>
-                                <td class="px-6 py-4 text-slate-500 hidden md:table-cell">—</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="mt-8 text-center">
-                <a href="https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=web&utm_campaign=actions#usage" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:text-sky-300 underline underline-offset-4 transition-colors">
-                    Full documentation on GitHub →
-                </a>
-            </div>
-        </section>
-
-        <section class="py-20 sm:py-28 px-4 sm:px-6 max-w-7xl mx-auto bg-slate-900/30 rounded-3xl" aria-label="Who It's For">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Built for audio professionals</h2>
-                <p class="text-slate-400 max-w-2xl mx-auto">No matter your workflow — if you work with audio files, this tool saves you hours.</p>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="glass p-6 rounded-2xl text-center hover:border-sky-500/50 transition-all group">
-                    <div class="w-14 h-14 bg-amber-500/10 rounded-xl flex items-center justify-center mx-auto mb-5" aria-hidden="true">
-                        <svg class="w-7 h-7 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Music Producers</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Batch convert sample packs, remove one-shot clutter, and keep your library pristine.</p>
-                </div>
-
-                <div class="glass p-6 rounded-2xl text-center hover:border-sky-500/50 transition-all group">
-                    <div class="w-14 h-14 bg-purple-500/10 rounded-xl flex items-center justify-center mx-auto mb-5" aria-hidden="true">
-                        <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">ML Engineers</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Prepare clean audio datasets at scale. Batch-convert, normalize loudness, deduplicate samples and rename with patterns.</p>
-                </div>
-
-                <div class="glass p-6 rounded-2xl text-center hover:border-sky-500/50 transition-all group">
-                    <div class="w-14 h-14 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-5" aria-hidden="true">
-                        <svg class="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Archivists</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Batch-convert thousands of legacy audio files into a unified MP3 format while preserving original filenames.</p>
-                </div>
-
-                <div class="glass p-6 rounded-2xl text-center hover:border-sky-500/50 transition-all group">
-                    <div class="w-14 h-14 bg-sky-500/10 rounded-xl flex items-center justify-center mx-auto mb-5" aria-hidden="true">
-                        <svg class="w-7 h-7 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-bold mb-2">Podcasters</h3>
-                    <p class="text-slate-400 text-sm leading-relaxed">Convert interview recordings to MP3, clean messy filenames from contributors, and consolidate scattered files into one folder.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="faq" class="py-20 sm:py-28 px-4 sm:px-6 max-w-4xl mx-auto" aria-label="Frequently Asked Questions">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Questions? We've got answers.</h2>
-            </div>
-
-            <div class="space-y-4" role="list">
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Is it safe? Will I lose my files?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        Absolutely. All destructive operations (delete, move) funnel through the system trash — first macOS <code class="mono text-xs">~/.Trash</code>, then Linux <code class="mono text-xs">gio trash</code>, with multiple fallbacks including local <code class="mono text-xs">to_delete/</code>. Your files are never permanently removed without a safety net.
-                    </p>
-                </details>
-
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Do I need ffmpeg?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        Yes — <code class="mono text-xs">ffmpeg</code> + <code class="mono text-xs">ffprobe</code> are required for audio conversion and duration detection. The <code class="mono text-xs">install.sh</code> script can automatically fetch them via your system package manager (<code class="mono text-xs">apt</code>, <code class="mono text-xs">brew</code>, <code class="mono text-xs">pacman</code>, or <code class="mono text-xs">winget</code>).
-                    </p>
-                </details>
-
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Is it difficult to use?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        Not at all. Run <code class="mono text-xs">audio-tools</code> with no arguments and the interactive menu guides you through every step — setting directories, choosing thresholds, and confirming operations. The batch mode with CLI flags is there when you're ready to automate.
-                    </p>
-                </details>
-
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Can I use it in scripts or CI?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        Yes. Every command works in non-interactive mode with exit codes following sysexits conventions (0 = success, 64 = usage error, 69 = missing dep, 74 = I/O error). Use <code class="mono text-xs">--json</code> for machine-readable output and <code class="mono text-xs">--dry-run</code> to preview. Pipe into Makefiles, CI pipelines, or cron jobs.
-                    </p>
-                </details>
-
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Which audio formats are supported?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        Input: <strong class="text-slate-300">WAV, OGG, FLAC, AAC, WMA, M4A</strong>. Output: <strong class="text-slate-300">MP3, OGG, AAC, FLAC</strong> with configurable bitrate. Also supports EBU R128 loudness normalization, silence detection, and SHA256 dedup. All processing handled by ffmpeg under the hood.
-                    </p>
-                </details>
-
-                <details class="glass rounded-2xl p-6 group open:border-sky-500/50 transition-all" role="listitem">
-                    <summary class="font-semibold cursor-pointer text-base sm:text-lg select-none list-none flex justify-between items-center gap-4 [&::-webkit-details-marker]:hidden">
-                        Is it really free?
-                        <svg class="w-5 h-5 text-slate-500 shrink-0 group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
-                    </summary>
-                    <p class="mt-4 text-slate-400 leading-relaxed">
-                        100% free and open-source under the MIT license. No paid tiers, no telemetry, no account required. Clone the repo and you're done.
-                    </p>
-                </details>
-            </div>
-        </section>
-
-        <section id="install" class="py-20 sm:py-28 bg-slate-900/50 border-y border-white/5" aria-label="Installation">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6">
-                <div class="text-center mb-12">
-                    <h2 class="text-3xl sm:text-4xl font-extrabold mb-4">Ready in 30 seconds.</h2>
-                    <p class="text-slate-400">One command. No signup. No telemetry. Just audio tools.</p>
-                </div>
-
-                <div class="bg-black p-1 rounded-2xl shadow-inner border border-white/10">
-                    <div class="flex items-center justify-between p-4 px-6 mono text-xs sm:text-sm md:text-base">
-                        <code id="install-cmd" class="text-sky-400 break-all">git clone https://github.com/ekosistema/audio-tools.git && cd audio-tools && ./install.sh</code>
-                        <button id="copy-btn" class="ml-4 p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white focus-visible:outline-sky-400 active:scale-95 shrink-0" title="Copy to clipboard" aria-label="Copy install command to clipboard">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" id="copy-icon">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex flex-wrap justify-center gap-6 text-sm text-slate-500">
-                    <span class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        No account required
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        MIT licensed
-                    </span>
-                    <span class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        Works on Linux, macOS &amp; WSL
-                    </span>
-                </div>
-
-                <div class="mt-12 text-center">
-                    <a href="https://github.com/ekosistema/audio-tools?utm_source=audiotools&utm_medium=web&utm_campaign=install" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
-                        </svg>
-                        <span>Star on GitHub</span>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <footer class="py-12 px-4 sm:px-6 border-t border-white/5 text-center" role="contentinfo">
-        <p class="text-slate-500 text-sm mb-2">Maintained by <a href="https://celerolab.com?utm_source=audiotools&utm_medium=web&utm_campaign=footer&utm_content=celerolab" target="_blank" rel="noopener noreferrer" class="text-sky-400 hover:underline focus-visible:outline-sky-400">CeleroLab</a></p>
-        <p class="text-slate-600 text-xs"><span data-current-year></span> — Released under the <a href="https://github.com/ekosistema/audio-tools/blob/main/LICENSE?utm_source=audiotools&utm_medium=web&utm_campaign=footer&utm_content=license" target="_blank" rel="noopener noreferrer" class="hover:text-sky-400 transition-colors focus-visible:outline-sky-400">MIT License</a>. v3.0.0</p>
-    </footer>
-
-    <script data-cfasync="false">
-        var hamburger = document.getElementById('hamburger');
-        var mobileMenu = document.getElementById('mobile-menu');
-        var menuLinks = mobileMenu.querySelectorAll('a');
-
-        hamburger.addEventListener('click', function () {
-            var expanded = hamburger.getAttribute('aria-expanded') === 'true' ? false : true;
-            hamburger.setAttribute('aria-expanded', expanded);
-            mobileMenu.classList.toggle('hidden');
-            menuLinks.forEach(function (link) {
-                link.setAttribute('tabindex', expanded ? '0' : '-1');
-            });
-        });
-
-        menuLinks.forEach(function (link) {
-            link.addEventListener('click', function () {
-                hamburger.setAttribute('aria-expanded', 'false');
-                mobileMenu.classList.add('hidden');
-                menuLinks.forEach(function (l) { l.setAttribute('tabindex', '-1'); });
-            });
-        });
-
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) {
-                hamburger.setAttribute('aria-expanded', 'false');
-                mobileMenu.classList.add('hidden');
-                menuLinks.forEach(function (l) { l.setAttribute('tabindex', '-1'); });
-                hamburger.focus();
-            }
-        });
-
-        function typeWriter(elementId, text, speed) {
-            speed = speed || 50;
-            var el = document.getElementById(elementId);
-            if (!el) return;
-            el.textContent = '';
-            var i = 0;
-            var cursor = document.getElementById('cursor');
-
-            function type() {
-                if (i < text.length) {
-                    el.textContent += text.charAt(i);
-                    i++;
-                    setTimeout(type, speed + Math.random() * 40);
-                } else {
-                    if (cursor) cursor.style.display = 'none';
-                    var output = document.getElementById('terminal-output');
-                    if (output) {
-                        output.classList.remove('hidden');
-                        output.classList.add('motion-safe-only');
-                    }
-                }
-            }
-            if (cursor) cursor.style.display = 'inline';
-            type();
+  var links = [].slice.call(document.querySelectorAll('nav.primary a[href^="#"]'));
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (a) {
+            if (a.getAttribute('href') === '#' + en.target.id) a.setAttribute('aria-current', 'true');
+            else a.removeAttribute('aria-current');
+          });
         }
+      });
+    }, { rootMargin: '-40% 0px -55% 0px' });
+    links.forEach(function (a) { var s = document.querySelector(a.getAttribute('href')); if (s) io.observe(s); });
+  }
 
-        var observer = new IntersectionObserver(function (entries) {
-            entries.forEach(function (entry) {
-                if (entry.isIntersecting) {
-                    typeWriter('typed-text', 'audio-tools convert ./samples --format mp3', 50);
-                    observer.disconnect();
-                }
-            });
-        }, { threshold: 0.5 });
+  document.querySelectorAll('[data-tabs]').forEach(function (root) {
+    var tabs = [].slice.call(root.querySelectorAll('[role=tab]'));
+    function select(t, focus) {
+      tabs.forEach(function (x) {
+        var on = x === t;
+        x.setAttribute('aria-selected', String(on));
+        x.tabIndex = on ? 0 : -1;
+        document.getElementById(x.getAttribute('aria-controls')).hidden = !on;
+      });
+      if (focus) t.focus();
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { select(t, false); });
+      t.addEventListener('keydown', function (e) {
+        var n = null;
+        if (e.key === 'ArrowRight') n = tabs[(i + 1) % tabs.length];
+        if (e.key === 'ArrowLeft') n = tabs[(i - 1 + tabs.length) % tabs.length];
+        if (e.key === 'Home') n = tabs[0];
+        if (e.key === 'End') n = tabs[tabs.length - 1];
+        if (n) { e.preventDefault(); select(n, true); }
+      });
+    });
+  });
 
-        var heroSection = document.querySelector('[aria-label="Hero"]');
-        if (heroSection) observer.observe(heroSection);
+  var live = document.getElementById('copy-live');
+  document.querySelectorAll('.copy').forEach(function (b) {
+    var label = b.firstChild.nodeValue;
+    b.addEventListener('click', function () {
+      var text = b.getAttribute('data-copy');
+      var done = function () {
+        b.firstChild.nodeValue = 'Copied'; b.setAttribute('data-done', 'true'); live.textContent = 'Command copied to clipboard';
+        setTimeout(function () { b.firstChild.nodeValue = label; b.removeAttribute('data-done'); live.textContent = ''; }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, function () { live.textContent = 'Copy failed. Select the command and copy it manually.'; });
+      else { live.textContent = 'Copy is not available here. Select the command and copy it manually.'; }
+    });
+  });
+  /* Keep flags like --version in one piece when a command wraps on small screens */
+  document.querySelectorAll('.cmd code').forEach(function (c) {
+    var t = c.textContent;
+    c.innerHTML = t.split(/(\s+)/).map(function (tok) {
+      var e = tok.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      return /^-/.test(tok) ? '<span class="nb">' + e + '</span>' : e;
+    }).join('');
+  });
 
-        var copyBtn = document.getElementById('copy-btn');
-        var copyIcon = document.getElementById('copy-icon');
-
-        copyBtn.addEventListener('click', async function () {
-            var command = document.getElementById('install-cmd').innerText;
-            try {
-                await navigator.clipboard.writeText(command);
-                copyIcon.innerHTML =
-                    '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
-                copyBtn.classList.add('bg-white/10');
-                setTimeout(function () {
-                    copyIcon.innerHTML =
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>';
-                    copyBtn.classList.remove('bg-white/10');
-                }, 2000);
-            } catch (err) {
-                console.error('Clipboard copy failed:', err);
-            }
-        });
-
-        copyBtn.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                copyBtn.click();
-            }
-        });
-
-        var yearEls = document.querySelectorAll('[data-current-year]');
-        if (yearEls.length) {
-            var year = new Date().getFullYear();
-            yearEls.forEach(function (el) { el.textContent = year; });
-        }
-    </script>
+  /* Hero terminal animation: plays once (under 5 seconds), off for reduced motion */
+  (function () {
+    var pre = document.getElementById('term-anim'); if (!pre) return;
+    var lines = [].slice.call(pre.querySelectorAll('.ln'));
+    var typed = [].slice.call(pre.querySelectorAll('[data-type]'));
+    typed.forEach(function (t) { t.setAttribute('data-full', t.textContent); });
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+    var token = 0, cur = document.createElement('span'); cur.className = 'cur';
+    var paused = false, box = document.getElementById('term');
+    ['mouseenter', 'focusin'].forEach(function (ev) { box.addEventListener(ev, function () { paused = true; }); });
+    ['mouseleave', 'focusout'].forEach(function (ev) { box.addEventListener(ev, function () { paused = false; }); });
+    function wait(ms) { return new Promise(function (r) { setTimeout(function chk() { if (paused) setTimeout(chk, 120); else r(); }, ms); }); }
+    function stick() { pre.scrollTop = pre.scrollHeight; }
+    async function run() {
+      var my = ++token;
+      lines.forEach(function (l) { l.classList.add('hid'); });
+      typed.forEach(function (t) { t.textContent = ''; });
+      pre.scrollTop = 0;
+      await wait(900);
+      for (var i = 0; i < lines.length; i++) {
+        if (my !== token) return;
+        var l = lines[i], t = l.querySelector('[data-type]');
+        if (i > 0) await wait(t && l.querySelector('.p') ? 700 : (t ? 450 : 0));
+        if (my !== token) return;
+        l.classList.remove('hid'); stick();
+        if (t) {
+          var full = t.getAttribute('data-full'); t.appendChild(cur);
+          for (var k = 1; k <= full.length; k++) {
+            if (my !== token) return;
+            t.textContent = full.slice(0, k); t.appendChild(cur);
+            stick(); await wait(42);
+          }
+          await wait(550);
+        } else { await wait(190); }
+      }
+      if (cur.parentNode) cur.parentNode.removeChild(cur);
+    }
+    run();
+  })();
+})();
+</script>
 </body>
 </html>
