@@ -1,77 +1,139 @@
 # Changelog
 
-## Unreleased
+All notable changes to this project are documented here.
 
-### Trash
-- Linux/WSL without `gio`/`trash-put` now follows the **FreeDesktop Trash spec** (`~/.local/share/Trash/files` + `info/*.trashinfo` with the original path and deletion date), so deleted files stay restorable from a file manager or `trash-restore`; `$XDG_DATA_HOME` is honoured
-- Each backend is tried in turn (gio, trash-put, FreeDesktop, `to_delete/`): a failing `gio` no longer skips the rest
-- Trash/`to_delete/` moves never overwrite an existing file of the same name (`song_2.mp3`); the same applies to macOS `~/.Trash`
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
+adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### Safety
-- **`--dry-run` now really never deletes**: `move_to_trash` is a no-op under dry run (`remove short|long`, `search --operation delete` previously ignored it)
-- **`--quiet` no longer skips delete confirmations** (it used to delete without asking)
-- New `confirm_prompt`: with no input available (closed stdin, CI) destructive commands exit 64 with a hint to use `--force` instead of hanging or guessing
-- Interactive menu exits 64 with a message when stdin is closed
+## [Unreleased]
 
-### Fixes
-- Convert, normalize, trim-silence and split-silence preserve the source sample rate and channels (MP3 capped at 48 kHz / 2 ch, AAC at 96 kHz); override with `AUDIO_TOOLS_SAMPLE_RATE` / `AUDIO_TOOLS_CHANNELS`
-- Outputs are written to `<name>.part.<ext>` and renamed on success, so failed runs leave no truncated files; ffmpeg's last error line is shown (full log with `--verbose`); zero-byte leftovers are re-converted
-- JSON output is escaped correctly (file names with quotes/backslashes), no `jq` needed; table JSON rows are arrays; global `--json` now applies to `list`
-- `bc` is no longer required; ffprobe CRLF output (Windows builds) no longer breaks `stats`/`list`
-- `--help`/`--version` work without ffmpeg installed
-- Bash 3.2 (macOS default) is detected with an actionable message; shebang is now `#!/usr/bin/env bash`
+Nothing yet. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to propose a change.
 
-### Tooling
-- GitHub Actions CI: shellcheck, bats on Ubuntu and macOS, CLI smoke test
-- `.shellcheckrc`; the codebase is shellcheck-clean
+## [3.1.0] - 2026-11-11
 
-## 3.0.0 — 2026-05
+A safety, correctness and polish release. If you only read one thing: **`--dry-run` now really
+changes nothing, `--quiet` can no longer delete without asking, and `dedup` finally does what its
+help text says.** Run `audio-tools --help` to see the new flags.
+
+### Added
+
+- **Color.** The interactive menu, tables, progress, `dedup`, `info`, `stats` and `--dry-run`
+  previews are now colorized. It is automatic on terminals, never leaks into pipes, and follows
+  [`NO_COLOR`](https://no-color.org/), `--no-color` and the new `--color[=auto|always|never]`
+  flag (also `AUDIO_TOOLS_COLOR` and `CLICOLOR_FORCE=1`).
+- **Global flags work after the command.** `audio-tools convert --dry-run` is now the same as
+  `audio-tools --dry-run convert` (applies to `--dry-run`, `--json`, `--color`, `--no-color`,
+  `--quiet`, `--verbose`, `--force`, `--no-force`).
+- `AUDIO_TOOLS_SAMPLE_RATE` and `AUDIO_TOOLS_CHANNELS` to force the output format of `convert`,
+  `normalize` and `trim-silence`.
+- Community files: `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, issue and pull request
+  templates, `docs/architecture.md`, `docs/safety.md`, and an animated demo in the README.
+- GitHub Actions CI: ShellCheck, the bats suite on Ubuntu and macOS, and a CLI smoke test.
+
+### Changed
+
+- **Audio quality:** `convert`, `normalize`, `trim-silence` and `split-silence` keep the source
+  sample rate and channel layout instead of forcing 44.1 kHz stereo. MP3 output is capped at
+  48 kHz / 2 channels and AAC at 96 kHz, the encoders' limits.
+- **Trash on Linux and WSL** follows the FreeDesktop Trash specification when `gio` and
+  `trash-put` are missing, so deleted files can be restored from a file manager. Every backend is
+  tried in turn, and a file never overwrites another one of the same name in the trash.
+- `dedup` keeps the first file by sorted path, so the result no longer depends on directory order.
+- `find-dupes` labels the kept file `keep:`.
+- Tables (`list --format table`, `info`) size their columns to the widest cell.
+- The version shown by `--version`, `--help` and the menu banner comes from the single `VERSION`
+  file.
+- Bash 4.0+ is checked at startup with an actionable message (macOS ships Bash 3.2), and the
+  shebang is now `#!/usr/bin/env bash`.
+
+### Fixed
+
+- **`--dry-run` was ignored** by `remove short`, `remove long` and `search --operation delete`
+  (which really moved files to the trash), and `clean`, `scan` and `search --operation extract`
+  (which really renamed or copied files). Every file-touching command now prints what it would do and
+  leaves the folder exactly as it was, without even creating an empty output directory.
+- `search --operation extract` overwrote files that shared a name; it now writes `name_1.wav`, ...
+- **`--quiet` skipped the delete confirmation** and deleted without asking. It no longer does.
+- **`dedup` never removed anything**, although its help text promised it. It now moves duplicates
+  to the trash, after a confirmation (or `--force`).
+- Destructive commands exit with status 64 and a hint to use `--force` when there is nobody to ask
+  (closed stdin, CI, cron) instead of hanging or guessing.
+- Failed conversions no longer leave truncated files that later runs mistook for finished work.
+  Outputs are written to `<name>.part.<ext>` and renamed on success, ffmpeg's last error line is
+  shown (the whole log with `--verbose`), and zero-byte leftovers are converted again.
+- JSON output is valid for any file name (quotes, backslashes, control characters), and no longer
+  needs `jq`. Table rows in JSON are arrays. `--json` now applies to `list`.
+- The interactive menu no longer aborts when `TERM` is unset or `dumb` (CI, containers), and exits
+  with a message when stdin is closed.
+- Invalid values for `--color` (and other flag parsing errors) exit with status 64 instead of being
+  ignored.
+- `bc` is no longer required. Windows ffprobe builds (CRLF output) no longer break `stats` and
+  `list`.
+- `--help` and `--version` work even when ffmpeg is not installed.
+- Messages containing backslashes are printed verbatim.
+
+## [3.0.0] - 2026-05
 
 Major refactor and production-ready release.
 
-- **Modular architecture**: Codebase split into four layers — `cli/`, `core/`, `io/`, `utils/` — with clear separation of concerns
-- **Interactive menu**: New guided terminal UI with config wizard, accessible by running `audio-tools` without arguments
-- **Trash safety system**: All destructive operations funnel through `move_to_trash()` — macOS Trash → gio trash → trash-put → local fallback
-- **Marketing landing page**: Standalone Tailwind CSS site under `html/` with PWA support
-- **CI/CD pipeline**: GitHub Actions with shellcheck, bats tests, and smoke tests on every push/PR
-- **Man page**: `man audio-tools.1` with full reference
-- **Configuration wizard**: First-run prompts for source dirs, output paths, and force mode
-- **Self-sourcing modules**: Core modules auto-source dependencies, enabling standalone testing
+### Added
 
-### Fixes & Improvements
+- **Modular architecture**: the code is split into four layers, `cli/`, `core/`, `io/` and
+  `utils/`, with a clear separation of concerns.
+- **Interactive menu**: a guided terminal UI with a configuration wizard, opened by running
+  `audio-tools` without arguments.
+- **Trash safety system**: all destructive operations go through `move_to_trash()` (macOS Trash,
+  `gio trash`, `trash-put`, local fallback).
+- **Landing page**: a standalone Tailwind CSS site under `html/` with PWA support.
+- **Man page**: `man audio-tools` with the full reference.
+- **First-run configuration wizard** for source directories, output paths and force mode.
+- **Self-sourcing modules**: core modules source their own dependencies, enabling standalone
+  testing.
+- `--no-force` as a global flag.
+- Tab completion (readline) in the menu's path prompts.
 
-- **Rename**: Extensión auto-preservada cuando el patrón no incluye `{ext}`
-- **Rename**: `{date}` ahora incluye sufijo aleatorio de 6 caracteres (`YYYYMMDD_XXXXXX`)
-- **Rename**: Filtra solo archivos de audio (ya no renombra `.txt` etc.)
-- **TUI**: Tab-completion (readline) en prompts de ruta
-- **TUI**: Recorte de espacios finales post-TAB en rutas
-- **Dispatcher**: `--no-force` como flag global
-- **Dispatcher**: `--verbose` overridea `--quiet` (ya no es error)
-- **Dispatcher**: Flags desconocidos sin subcomando ahora devuelven error (exit 64)
-- **Dispatcher**: `--quiet --help` y similares ahora muestran ayuda correctamente
-- **Dispatcher**: `clean-names` renombrado a `clean` (alias eliminado)
-- **Tests**: 87/89 tests pasan (2 fallan por shellcheck no instalado)
+### Changed
 
-## 2.1.0 — 2025
+- `clean-names` was renamed to `clean` (the old alias was removed).
+- `--verbose` overrides `--quiet` instead of being an error.
+- Unknown flags without a subcommand return an error (exit 64).
 
-- Safety confirmation prompts before destructive operations
-- `--force` flag to skip confirmations in batch mode
-- HTML marketing page initial version
+### Fixed
 
-## 2.0.0 — 2025
+- `rename`: the extension is preserved when the pattern does not include `{ext}`; `{date}` now
+  includes a random 6-character suffix (`YYYYMMDD_XXXXXX`); only audio files are renamed (no more
+  `.txt` files).
+- Menu: trailing spaces after TAB completion in paths are trimmed.
+- `--quiet --help` and similar combinations now show the help.
 
-- Batch mode with `--action` flag and argument parsing (`lib/cli/args.sh`)
-- FFmpeg/ffprobe wrapper with `LD_LIBRARY_PATH` isolation (`lib/io/media.sh`)
-- Dedicated modules: `converter.sh`, `cleaner.sh`, `organizer.sh`
-- Environment variable configuration (`AUDIO_TOOLS_CONVERTED_DIR`, `AUDIO_TOOLS_SCAN_DIR`)
-- Improved error handling with sysexits exit codes
+## [2.1.0] - 2025
 
-## 1.0.0 — 2024
+### Added
 
-- Initial release
-- Single monolithic script (`audio_tools.sh`)
-- Basic MP3 conversion and filename cleaning
-- MIT License
+- Confirmation prompts before destructive operations.
+- `--force` flag to skip confirmations in batch mode.
+- First version of the HTML landing page.
+
+## [2.0.0] - 2025
+
+### Added
+
+- Batch mode with the `--action` flag and argument parsing (`lib/cli/args.sh`).
+- ffmpeg/ffprobe wrapper with `LD_LIBRARY_PATH` isolation (`lib/io/media.sh`).
+- Dedicated modules: `converter.sh`, `cleaner.sh`, `organizer.sh`.
+- Environment variable configuration (`AUDIO_TOOLS_CONVERTED_DIR`, `AUDIO_TOOLS_SCAN_DIR`).
+
+### Changed
+
+- Improved error handling with [sysexits](https://man.freebsd.org/cgi/man.cgi?query=sysexits) exit
+  codes.
+
+## [1.0.0] - 2024
+
+### Added
+
+- Initial release: a single monolithic script (`audio_tools.sh`) with basic MP3 conversion and
+  filename cleaning. MIT license.
 
 ---
 

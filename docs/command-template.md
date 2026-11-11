@@ -78,9 +78,16 @@ Each command can access these exported variables (set by `lib/cli/dispatcher.sh`
 - `$AUDIO_TOOLS_JSON` — Output JSON format (yes/no)
 - `$AUDIO_TOOLS_DRY_RUN` — Simulate without side effects (yes/no)
 - `$AUDIO_TOOLS_NO_COLOR` — Disable ANSI colors (yes/no)
+- `$AUDIO_TOOLS_COLOR` — `auto` (default), `always` or `never`
 - `$AUDIO_TOOLS_FORCE` — Skip confirmations (yes/no)
 - `$AUDIO_TOOLS_DIRECTORY` — Target directory
 - `$AUDIO_TOOLS_THRESHOLD` — Duration threshold (for remove commands)
+
+> **You do not parse the global flags yourself.** The dispatcher handles `--dry-run`, `--json`,
+> `--color[=WHEN]`, `--no-color`, `--quiet`, `--verbose`, `--force` and `--no-force`, whether they
+> come before or after the command name, and removes them before calling your `cmd_<name>()`.
+> Parse only the options that belong to your command. (Short flags such as `-f` are *not* hoisted
+> because they can mean different things per command.)
 
 ## Example: convert.sh
 
@@ -168,22 +175,57 @@ EOF
 
 ## Pattern: JSON Output
 
+Never build JSON by interpolating raw strings: a file name with a quote in it would produce invalid
+JSON. Use the helpers from `lib/cli/ui/output.sh` (pure Bash, no `jq`):
+
 ```bash
 if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
-    printf '{"status":"success","files":%d}\n' "$count"
+    printf '{"status":"success","directory":%s,"files":%d}\n' "$(json_string "$dir")" "$count"
 else
     log_info "Converted $count files"
 fi
 ```
 
+`json_string` quotes and escapes a string, `json_number` prints a number or `null`.
+
 ## Pattern: Confirmation Prompts
 
+Use `confirm_prompt` (from `lib/utils/errors.sh`) before anything destructive. It skips the question
+with `--force`, never lets `--quiet` skip it, and exits with status 64 and a helpful message when
+there is nobody to answer (closed stdin, CI) instead of guessing:
+
 ```bash
-if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-    read -p "Delete ${#files[@]} files? (yes/no): " response
-    [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
-fi
+confirm_prompt "Delete ${#files[@]} files?" || { log_info "Cancelled"; return 0; }
 ```
+
+## Pattern: Destructive Operations
+
+Never call `rm`. Move files with `move_to_trash` (from `lib/io/trash.sh`): it is recoverable, never
+overwrites, and is already a no-op under `--dry-run`, so a command that funnels deletions through it
+honours `--dry-run` for free. Report with `delete_verb` so the message says "Would delete" on a dry run:
+
+```bash
+for file in "${files[@]}"; do
+    move_to_trash "$file" "$dir" || true
+done
+log_info "$(delete_verb) ${#files[@]} files"
+```
+
+If your command writes new files, honour `--dry-run` yourself (print what would happen and return)
+and write through a temporary `.part` file (see `run_atomic` in `lib/io/filesystem.sh`) so a failure
+never leaves a truncated output.
+
+## Pattern: Color
+
+Colors come from one palette (`lib/utils/logging.sh`). Use the variables, never raw escape codes:
+`$RED $GREEN $YELLOW $CYAN $MAGENTA $BOLD $DIM $NC` for text on **stdout**, and `$E_RED`, `$E_CYAN`,
+`$E_NC`… for text on **stderr**. They are empty when color is off, so the same line works everywhere:
+
+```bash
+printf '  %bkeep:%b %s\n' "$GREEN" "$NC" "$path"
+```
+
+Use `printf '%b%s'` (not `echo -e "...$user_text"`) so file names containing backslashes print verbatim.
 
 ## Exit Codes
 
