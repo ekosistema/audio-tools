@@ -4,6 +4,8 @@ setup() {
     cp "$FIXTURES_DIR/audio/short.wav" "$TEMP_DIR/"
     ESC=$'\033'
     unset NO_COLOR CLICOLOR_FORCE AUDIO_TOOLS_COLOR AUDIO_TOOLS_NO_COLOR
+    # CI runners export TERM=dumb, which (by design) disables color; pin a real terminal
+    export TERM=xterm-256color
 }
 
 teardown() {
