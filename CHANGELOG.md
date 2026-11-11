@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Trash
+- Linux/WSL without `gio`/`trash-put` now follows the **FreeDesktop Trash spec** (`~/.local/share/Trash/files` + `info/*.trashinfo` with the original path and deletion date), so deleted files stay restorable from a file manager or `trash-restore`; `$XDG_DATA_HOME` is honoured
+- Each backend is tried in turn (gio, trash-put, FreeDesktop, `to_delete/`): a failing `gio` no longer skips the rest
+- Trash/`to_delete/` moves never overwrite an existing file of the same name (`song_2.mp3`); the same applies to macOS `~/.Trash`
+
 ### Safety
 - **`--dry-run` now really never deletes**: `move_to_trash` is a no-op under dry run (`remove short|long`, `search --operation delete` previously ignored it)
 - **`--quiet` no longer skips delete confirmations** (it used to delete without asking)
