@@ -36,8 +36,11 @@ audio_info() {
     done <<< "$info"
 
     local minutes seconds
-    minutes=$(echo "${duration:-0} / 60" | bc 2>/dev/null || echo "0")
-    seconds=$(echo "${duration:-0} % 60" | bc 2>/dev/null || echo "0")
+    local whole="${duration:-0}"
+    whole="${whole%.*}"
+    case "$whole" in ''|*[!0-9]*) whole=0 ;; esac
+    minutes=$((whole / 60))
+    seconds=$((whole % 60))
     local duration_str="${minutes}m${seconds}s"
 
     local size_hr

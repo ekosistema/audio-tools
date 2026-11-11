@@ -78,6 +78,11 @@ EOF
         esac
     done
 
+    # Global --json wins over the default text format
+    if [ "${AUDIO_TOOLS_JSON:-no}" = "yes" ]; then
+        format="json"
+    fi
+
     # Validate path (file or directory)
     if [ ! -d "$dir" ] && [ ! -f "$dir" ]; then
         log_error "Path not found: $dir"
@@ -109,7 +114,9 @@ EOF
         if command -v ffprobe >/dev/null 2>&1; then
             local duration=$(ffprobe -v error -show_entries format=duration \
                 -of default=noprint_wrappers=1:nokey=1 "$file" 2>/dev/null || echo 0)
-            total_duration=$(echo "$total_duration + ${duration%.*}" | bc)
+            duration="${duration%.*}"
+            case "$duration" in ''|*[!0-9]*) duration=0 ;; esac
+            total_duration=$((total_duration + duration))
         fi
     done < <(resolve_audio_files "$dir")
 
@@ -176,23 +183,23 @@ EOF
 
         json)
             printf '{'
-            printf '"directory":"%s",' "$dir"
+            printf '"directory":%s,' "$(json_string "$dir")"
             printf '"files":['
             local first=true
             for file in "${files[@]}"; do
-                local size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
-                local duration=0
-                local bitrate=""
-                local codec=""
-                local format_name=""
+                local size; size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null || echo 0)
+                local duration="" bitrate="" codec="" format_name=""
                 if command -v ffprobe >/dev/null 2>&1; then
-                    local info=$(ffprobe -v error -show_entries \
-                        "format=duration,bit_rate,format_name stream=codec_name" \
-                        -of default=noprint_wrappers=1:nokey=1 "$file" 2>/dev/null)
-                    duration=$(echo "$info" | sed -n '1p' || echo 0)
-                    bitrate=$(echo "$info" | sed -n '2p' || echo "")
-                    format_name=$(echo "$info" | sed -n '3p' || echo "")
-                    codec=$(echo "$info" | sed -n '5p' || echo "")
+                    # Key-based parsing: robust against missing fields and stream order
+                    local line
+                    while IFS= read -r line; do
+                        case "$line" in
+                            duration=*) duration="${line#*=}" ;;
+                            bit_rate=*) bitrate="${line#*=}" ;;
+                            format_name=*) format_name="${line#*=}" ;;
+                            codec_name=*) [ -z "$codec" ] && codec="${line#*=}" ;;
+                        esac
+                    done < <(media_get_info "$file" 2>/dev/null)
                 fi
 
                 if [ "$first" = true ]; then
@@ -201,9 +208,10 @@ EOF
                     printf ','
                 fi
 
-                printf '{"path":"%s","name":"%s","size":%d,"duration":%.2f,"bitrate":"%s","codec":"%s","format":"%s"}' \
-                    "$file" "$(basename "$file")" "$size" "$duration" \
-                    "$bitrate" "$codec" "$format_name"
+                printf '{"path":%s,"name":%s,"size":%s,"duration":%s,"bitrate":%s,"codec":%s,"format":%s}' \
+                    "$(json_string "$file")" "$(json_string "$(basename "$file")")" \
+                    "$(json_number "$size")" "$(json_number "$duration")" \
+                    "$(json_string "$bitrate")" "$(json_string "$codec")" "$(json_string "$format_name")"
             done
             printf '],'
             printf '"summary":{"total":%d,"size":%d,"duration":%d}' \

@@ -42,30 +42,80 @@ init_output() {
 
 # ── Output Helpers ──
 
+# ── JSON primitives ──
+# Pure bash (no jq dependency). Every JSON string emitted by audio-tools goes
+# through json_escape so quotes, backslashes and control characters in file
+# names can never produce invalid JSON.
+
+# Print $1 escaped for use INSIDE a JSON string (no surrounding quotes).
+json_escape() {
+    # C locale: [[:cntrl:]] must only match ASCII controls, never UTF-8 bytes
+    local LC_ALL=C
+    local s="$1"
+    s="${s//\\/\\\\}"
+    s="${s//\"/\\\"}"
+    s="${s//$'\n'/\\n}"
+    s="${s//$'\r'/\\r}"
+    s="${s//$'\t'/\\t}"
+    s="${s//$'\b'/\\b}"
+    s="${s//$'\f'/\\f}"
+    if [[ "$s" =~ [[:cntrl:]] ]]; then
+        local out="" ch i code
+        for ((i = 0; i < ${#s}; i++)); do
+            ch="${s:i:1}"
+            printf -v code '%d' "'$ch"
+            # Only ASCII controls (and DEL) are escaped; bytes >= 0x80 pass through
+            if [ "$code" -ge 0 ] && { [ "$code" -lt 32 ] || [ "$code" -eq 127 ]; }; then
+                printf -v ch '\\u%04x' "$code"
+            fi
+            out+="$ch"
+        done
+        s="$out"
+    fi
+    printf '%s' "$s"
+}
+
+# Print $1 as a quoted JSON string.
+json_string() { printf '"%s"' "$(json_escape "$1")"; }
+
+# Print $1 as a JSON number, or null when it is not a plain non-negative number.
+json_number() {
+    case "$1" in
+        ''|*[!0-9.]*|*.*.*|.|.*|*.) printf 'null' ;;
+        *) printf '%s' "$1" ;;
+    esac
+}
+
+# ── Output Helpers ──
+
+_output_status_json() {
+    printf '{"status":"%s","message":%s}\n' "$1" "$(json_string "$2")"
+}
+
 output_success() {
     local message="$1"
     if [ "$OUTPUT_FORMAT" = "json" ]; then
-        printf '{"status":"success","message":"%s"}\n' "$message"
+        _output_status_json success "$message"
     elif [ "$OUTPUT_QUIET" != "yes" ]; then
-        echo -e "${COLOR_GREEN}✓${COLOR_RESET} $message"
+        printf '%b%s\n' "${COLOR_GREEN}✓${COLOR_RESET} " "$message"
     fi
 }
 
 output_error() {
     local message="$1"
     if [ "$OUTPUT_FORMAT" = "json" ]; then
-        printf '{"status":"error","message":"%s"}\n' "$message" >&2
+        _output_status_json error "$message" >&2
     else
-        echo -e "${COLOR_RED}✗${COLOR_RESET} $message" >&2
+        printf '%b%s\n' "${COLOR_RED}✗${COLOR_RESET} " "$message" >&2
     fi
 }
 
 output_warning() {
     local message="$1"
     if [ "$OUTPUT_FORMAT" = "json" ]; then
-        printf '{"status":"warning","message":"%s"}\n' "$message"
+        _output_status_json warning "$message"
     elif [ "$OUTPUT_QUIET" != "yes" ]; then
-        echo -e "${COLOR_YELLOW}⚠${COLOR_RESET} $message"
+        printf '%b%s\n' "${COLOR_YELLOW}⚠${COLOR_RESET} " "$message"
     fi
 }
 
@@ -74,7 +124,7 @@ output_info() {
     if [ "$OUTPUT_FORMAT" = "json" ]; then
         return  # JSON doesn't output info
     elif [ "$OUTPUT_QUIET" != "yes" ]; then
-        echo -e "${COLOR_CYAN}ℹ${COLOR_RESET} $message"
+        printf '%b%s\n' "${COLOR_CYAN}ℹ${COLOR_RESET} " "$message"
     fi
 }
 
@@ -122,7 +172,10 @@ output_table_header() {
 }
 
 output_table_row() {
-    TABLE_ROWS+=("$@")
+    # One entry per row, cells joined by the ASCII unit separator
+    local _row
+    printf -v _row '%s\x1f' "$@"
+    TABLE_ROWS+=("${_row%$'\x1f'}")
 
     if [ "$OUTPUT_FORMAT" = "json" ]; then
         return
@@ -150,10 +203,22 @@ output_table_row() {
 
 output_table_footer() {
     if [ "$OUTPUT_FORMAT" = "json" ]; then
-        # Output as JSON array
-        printf '{"columns":%s,"rows":%s}\n' \
-            "$(printf '%s\n' "${TABLE_COLS[@]}" | jq -R . | jq -s .)" \
-            "$(printf '%s\n' "${TABLE_ROWS[@]}" | jq -R . | jq -s .)"
+        # {"columns":[...],"rows":[[cell,...],...]}
+        local col row cell sep="" rsep="" cells
+        printf '{"columns":['
+        for col in "${TABLE_COLS[@]}"; do
+            printf '%s%s' "$sep" "$(json_string "$col")"; sep=","
+        done
+        printf '],"rows":['
+        for row in "${TABLE_ROWS[@]}"; do
+            printf '%s[' "$rsep"; rsep=","; sep=""
+            IFS=$'\x1f' read -r -a cells <<< "$row"
+            for cell in "${cells[@]}"; do
+                printf '%s%s' "$sep" "$(json_string "$cell")"; sep=","
+            done
+            printf ']'
+        done
+        printf ']}\n'
     elif [ "$OUTPUT_QUIET" != "yes" ]; then
         # Print footer
         local total=0
@@ -179,7 +244,7 @@ output_json_object() {
         else
             printf ','
         fi
-        printf '"%s":"%s"' "$key" "${obj_ref[$key]}"
+        printf '%s:%s' "$(json_string "$key")" "$(json_string "${obj_ref[$key]}")"
     done
     printf '}\n'
 }
@@ -194,7 +259,7 @@ output_json_array() {
         else
             printf ','
         fi
-        printf '"%s"' "$item"
+        json_string "$item"
     done
     printf ']\n'
 }
@@ -204,7 +269,7 @@ output_json() {
     shift
 
     # Build JSON object from remaining args (key=value pairs)
-    printf "{\"%s\":{" "$key"
+    printf '{%s:{' "$(json_string "$key")"
     local first=true
     while [ $# -gt 0 ]; do
         if [ "$first" = true ]; then
@@ -216,7 +281,7 @@ output_json() {
         local kv="$1"
         local k="${kv%%=*}"
         local v="${kv#*=}"
-        printf '"%s":"%s"' "$k" "$v"
+        printf '%s:%s' "$(json_string "$k")" "$(json_string "$v")"
         shift
     done
     printf '}}\n'
@@ -284,7 +349,7 @@ output_file_list() {
                 else
                     printf ','
                 fi
-                printf '{"path":"%s","name":"%s"}' "$file" "$(basename "$file")"
+                printf '{"path":%s,"name":%s}' "$(json_string "$file")" "$(json_string "$(basename "$file")")"
             done
             printf ']\n'
             ;;
