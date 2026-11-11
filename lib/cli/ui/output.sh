@@ -139,36 +139,12 @@ declare -g TABLE_COLS=()
 declare -g TABLE_WIDTHS=()
 declare -g TABLE_ROWS=()
 
+# Tables are buffered and printed by output_table_footer, once every row is known,
+# so column widths fit the widest cell (streaming rows left ragged columns).
 output_table_header() {
     TABLE_COLS=("$@")
     TABLE_ROWS=()
-
-    if [ "$OUTPUT_FORMAT" = "json" ]; then
-        return
-    fi
-
-    # Calculate column widths
     TABLE_WIDTHS=()
-    for col in "${TABLE_COLS[@]}"; do
-        TABLE_WIDTHS+=("${#col}")
-    done
-
-    # Print header
-    local sep=""
-    for ((i=0; i<${#TABLE_COLS[@]}; i++)); do
-        printf "%s%-${TABLE_WIDTHS[$i]}s" "$sep" "${TABLE_COLS[$i]}"
-        sep="  "
-    done
-    echo ""
-
-    # Print separator
-    sep=""
-    for width in "${TABLE_WIDTHS[@]}"; do
-        printf "%s" "$sep"
-        printf '%0.s─' $(seq 1 "$width")
-        sep="  "
-    done
-    echo ""
 }
 
 output_table_row() {
@@ -176,29 +152,21 @@ output_table_row() {
     local _row
     printf -v _row '%s\x1f' "$@"
     TABLE_ROWS+=("${_row%$'\x1f'}")
+}
 
-    if [ "$OUTPUT_FORMAT" = "json" ]; then
-        return
-    fi
-
-    local -a row_args=("$@")
-
-    # Update widths if needed
-    for ((i=0; i<$#; i++)); do
-        local val="${row_args[$i]}"
-        if [ ${#val} -gt "${TABLE_WIDTHS[i]:-0}" ]; then
-            TABLE_WIDTHS[i]=${#val}
+# Print one table line: cells padded to the column widths (no trailing spaces).
+# Usage: _table_print_line <cell>...   (widths come from TABLE_WIDTHS)
+_table_print_line() {
+    local i last=$(( $# - 1 )) sep=""
+    local -a cells=("$@")
+    for i in "${!cells[@]}"; do
+        if [ "$i" -eq "$last" ]; then
+            printf '%s%s\n' "$sep" "${cells[i]}"
+        else
+            printf '%s%-*s' "$sep" "${TABLE_WIDTHS[i]}" "${cells[i]}"
         fi
-    done
-
-    # Print row
-    local sep=""
-    for ((i=0; i<$#; i++)); do
-        local val="${row_args[$i]}"
-        printf "%s%-${TABLE_WIDTHS[$i]}s" "$sep" "$val"
         sep="  "
     done
-    echo ""
 }
 
 output_table_footer() {
@@ -219,11 +187,36 @@ output_table_footer() {
             printf ']'
         done
         printf ']}\n'
-    elif [ "$OUTPUT_QUIET" != "yes" ]; then
-        # Print footer
-        local total=0
-        [ ${#TABLE_ROWS[@]} -gt 0 ] && total=${#TABLE_ROWS[@]}
-        echo "Total: $total items"
+    else
+        # Column widths: widest of the header and every cell
+        local i w row sep=""
+        local -a cells=()
+        TABLE_WIDTHS=()
+        for i in "${!TABLE_COLS[@]}"; do TABLE_WIDTHS[i]=${#TABLE_COLS[i]}; done
+        for row in "${TABLE_ROWS[@]}"; do
+            IFS=$'\x1f' read -r -a cells <<< "$row"
+            for i in "${!cells[@]}"; do
+                if [ "${#cells[i]}" -gt "${TABLE_WIDTHS[i]:-0}" ]; then TABLE_WIDTHS[i]=${#cells[i]}; fi
+            done
+        done
+
+        _table_print_line "${TABLE_COLS[@]}"
+        local -a rule=()
+        for w in "${TABLE_WIDTHS[@]}"; do
+            printf -v sep '%*s' "$w" ''
+            rule+=("${sep// /─}")
+        done
+        _table_print_line "${rule[@]}"
+        for row in "${TABLE_ROWS[@]}"; do
+            IFS=$'\x1f' read -r -a cells <<< "$row"
+            _table_print_line "${cells[@]}"
+        done
+
+        if [ "$OUTPUT_QUIET" != "yes" ]; then
+            local total=0
+            [ ${#TABLE_ROWS[@]} -gt 0 ] && total=${#TABLE_ROWS[@]}
+            echo "Total: $total items"
+        fi
     fi
 
     # Clear
