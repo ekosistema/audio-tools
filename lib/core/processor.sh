@@ -13,6 +13,12 @@ if [ -z "$(type -t init_progress)" ]; then
     source "$(dirname "${BASH_SOURCE[0]}")/../utils/progress.sh"
 fi
 
+# Adapter so run_atomic can append the temp output path as the last argument.
+_processor_call() {
+    local fn="$1" input="$2" out="$3"
+    "$fn" "$input" "$out"
+}
+
 _processor_each_file() {
     local dir="$1" action_name="$2" process_fn="$3" ext_suffix="$4"
     local files=()
@@ -39,7 +45,7 @@ _processor_each_file() {
         fi
 
         update_progress "$filename"
-        if "$process_fn" "$file" "$output" 2>/dev/null; then
+        if run_atomic "$output" _processor_call "$process_fn" "$file"; then
             count=$((count + 1))
         else
             errors=$((errors + 1))

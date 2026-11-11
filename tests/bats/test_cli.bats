@@ -250,3 +250,20 @@ teardown() {
     run bash bin/audio-tools --force search --query short --operation delete "$TEMP_DIR"
     [ "$status" -eq 0 ]
 }
+
+@test "normalize writes atomically and keeps the source sample rate" {
+    cp "$FIXTURES_DIR/audio/medium.wav" "$TEMP_DIR/"
+    run bash bin/audio-tools normalize "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ -s "$TEMP_DIR/processed/medium_normalized.wav" ]
+    [ -z "$(find "$TEMP_DIR" -name '*.part.*')" ]
+    [ "$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of default=nw=1:nk=1 "$TEMP_DIR/processed/medium_normalized.wav" | tr -d '\r')" = "44100" ]
+}
+
+@test "normalize reports a failure reason for undecodable files" {
+    echo "not audio" > "$TEMP_DIR/bad.wav"
+    run bash bin/audio-tools normalize "$TEMP_DIR"
+    [ "$status" -ne 0 ]
+    [ ! -e "$TEMP_DIR/processed/bad_normalized.wav" ]
+    [ -z "$(find "$TEMP_DIR" -name '*.part.*')" ]
+}

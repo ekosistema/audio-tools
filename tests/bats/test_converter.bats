@@ -84,3 +84,33 @@ _probe() { ffprobe -v error -select_streams a:0 -show_entries "stream=$2" -of de
     [ "$status" -eq 0 ]
     [ "$(_probe "$TEMP_DIR/converted_mp3/medium.mp3" sample_rate)" = "22050" ]
 }
+
+# ── Atomic output ──
+
+@test "failed conversion leaves no partial or output file" {
+    echo "not audio" > "$TEMP_DIR/bad.wav"
+    run convert_to_mp3 "$TEMP_DIR"
+    [ "$status" -eq 1 ]
+    [ ! -e "$TEMP_DIR/converted_mp3/bad.mp3" ]
+    [ -z "$(find "$TEMP_DIR" -name '*.part.*')" ]
+}
+
+@test "failed conversion reports the ffmpeg reason" {
+    echo "not audio" > "$TEMP_DIR/bad.wav"
+    run convert_to_mp3 "$TEMP_DIR"
+    echo "$output" | grep -q "bad.mp3"
+}
+
+@test "successful conversion leaves no .part files" {
+    run convert_to_mp3 "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ -z "$(find "$TEMP_DIR" -name '*.part.*')" ]
+}
+
+@test "zero-byte output from a previous run is re-converted" {
+    mkdir -p "$TEMP_DIR/converted_mp3"
+    : > "$TEMP_DIR/converted_mp3/short.mp3"
+    run convert_to_mp3 "$TEMP_DIR"
+    [ "$status" -eq 0 ]
+    [ -s "$TEMP_DIR/converted_mp3/short.mp3" ]
+}

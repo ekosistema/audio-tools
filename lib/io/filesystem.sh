@@ -4,7 +4,7 @@ _audio_extensions_find() {
     local dir="$1" depth="${2:-${AUDIO_TOOLS_MAX_DEPTH:-}}"
     local -a depth_args=()
     [ -n "$depth" ] && depth_args=(-maxdepth "$depth")
-    find "$dir" "${depth_args[@]}" -type f \( -iname "*.mp3" -o -iname "*.wav" -o -iname "*.ogg" \
+    find "$dir" "${depth_args[@]}" -type f ! -name '*.part.*' \( -iname "*.mp3" -o -iname "*.wav" -o -iname "*.ogg" \
         -o -iname "*.flac" -o -iname "*.aac" -o -iname "*.wma" -o -iname "*.m4a" \) -print0
 }
 
@@ -148,4 +148,29 @@ _format_rename() {
     formatted="${formatted//\{ext\}/$ext}"
     formatted="${formatted//\{date\}/$(date +%Y%m%d)_$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom 2>/dev/null | head -c6)}"
     echo "$formatted"
+}
+
+# Run a media command that writes OUTPUT atomically: it renders to a sibling
+# "<name>.part.<ext>" file and only renames it into place on success, so a
+# failed or interrupted run never leaves a truncated file that later runs
+# would mistake for finished work. ffmpeg's stderr goes to a temp log; the
+# last line is reported on failure (the full log with --verbose).
+# Usage: run_atomic <output> <command> [args...]   (command gets the temp path appended)
+run_atomic() {
+    local output="$1"; shift
+    local tmp="${output%.*}.part.${output##*.}"
+    local errlog; errlog=$(mktemp)
+    if "$@" "$tmp" 2>"$errlog" && [ -s "$tmp" ] && mv -f "$tmp" "$output"; then
+        rm -f "$errlog"
+        return 0
+    fi
+    rm -f "$tmp"
+    local reason; reason=$(tail -n 1 "$errlog" 2>/dev/null)
+    if [ "${AUDIO_TOOLS_VERBOSE:-no}" = "yes" ]; then
+        cat "$errlog" >&2
+    elif [ -n "$reason" ]; then
+        log_error "  ${output##*/}: $reason"
+    fi
+    rm -f "$errlog"
+    return 1
 }

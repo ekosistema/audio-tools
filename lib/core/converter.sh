@@ -13,6 +13,12 @@ if [ -z "$(type -t init_progress)" ]; then
     source "$(dirname "${BASH_SOURCE[0]}")/../utils/progress.sh"
 fi
 
+# Adapter so run_atomic can append the temp output path as the last argument.
+_convert_call() {
+    local input="$1" fmt="$2" bitrate="$3" out="$4"
+    media_convert_file "$input" "$out" "$fmt" "$bitrate"
+}
+
 convert_to_mp3() {
     local source_folder="$1"
     local custom_output="${2:-}"
@@ -68,12 +74,12 @@ convert_to_mp3() {
         local filename; filename=$(basename "$file")
         local output="${output_folder}/${filename%.*}$ext"
 
-        if [ -f "$output" ]; then
+        if [ -s "$output" ]; then
             skipped=$((skipped + 1)); continue
         fi
 
         update_progress "$filename"
-        if media_convert_file "$file" "$output" "$fmt" "$bitrate"; then
+        if run_atomic "$output" _convert_call "$file" "$fmt" "$bitrate"; then
             count=$((count + 1))
         else
             errors=$((errors + 1))
