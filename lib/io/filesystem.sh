@@ -150,7 +150,12 @@ _format_rename() {
     formatted="${formatted//\{n\}/$num}"
     formatted="${formatted//\{orig\}/$base}"
     formatted="${formatted//\{ext\}/$ext}"
-    formatted="${formatted//\{date\}/$(date +%Y%m%d)_$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom 2>/dev/null | head -c6)}"
+    if [[ "$formatted" == *"{date}"* ]]; then
+        # Pure-bash suffix: piping /dev/urandom through tr|head can spin forever on macOS
+        local chars=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 rnd="" i
+        for ((i = 0; i < 6; i++)); do rnd+="${chars:RANDOM % 62:1}"; done
+        formatted="${formatted//\{date\}/$(date +%Y%m%d)_$rnd}"
+    fi
     echo "$formatted"
 }
 
