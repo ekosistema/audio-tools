@@ -60,9 +60,9 @@ _dedup_report() {
         styled_echo "$DARK_GRAY" "── Duplicate group ──"
         for i in "${!group[@]}"; do
             if [ "$i" -eq 0 ]; then
-                echo -e "  ${BOLD}keep:${NC}      ${group[$i]}"
+                echo -e "  ${GREEN}${BOLD}keep:${NC}      ${group[$i]}"
             else
-                echo -e "  ${DIM}duplicate:${NC} ${group[$i]}"
+                echo -e "  ${YELLOW}duplicate:${NC} ${group[$i]}"
                 DUP_REMOVE+=("${group[$i]}")
             fi
         done

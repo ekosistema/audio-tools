@@ -1,4 +1,5 @@
 # Audio Tools — Progress bar (compact single-line progress)
+# Everything goes to stderr, so stdout stays clean for data and pipes.
 
 _PROGRESS_TOTAL=0
 _PROGRESS_CURRENT=0
@@ -32,12 +33,16 @@ update_progress() {
     local base; base=$(basename "$file")
 
     if [ "$_PROGRESS_TTY" = "yes" ]; then
-        local line="  ($cur/$total) $base"
-        local max_len=$((_PROGRESS_COLS - 2))
-        if [ ${#line} -gt "$max_len" ]; then
-            line="${line:0:$((max_len - 3))}..."
+        # "  (3/10) name.wav": counter in cyan, file name dim, truncated to the terminal width
+        local counter="($cur/$total)"
+        local room=$(( _PROGRESS_COLS - 2 - ${#counter} - 1 - 2 ))
+        [ "$room" -lt 4 ] && room=4
+        if [ ${#base} -gt "$room" ]; then
+            base="${base:0:$((room - 3))}..."
         fi
-        printf '\r%s%*s' "$line" $((_PROGRESS_COLS - ${#line})) "" >&2
+        local used=$(( 2 + ${#counter} + 1 + ${#base} ))
+        printf '\r  %b%s%b %b%s%b%*s' "$E_CYAN" "$counter" "$E_NC" "$E_DIM" "$base" "$E_NC" \
+            "$(( _PROGRESS_COLS - used > 0 ? _PROGRESS_COLS - used : 0 ))" "" >&2
     elif [ "${AUDIO_TOOLS_QUIET:-no}" = "no" ]; then
         echo "  ($cur/$total) $base" >&2
     fi
@@ -51,7 +56,10 @@ finish_progress() {
     _PROGRESS_ACTIVE=no
 
     if [ "$_PROGRESS_TTY" = "yes" ]; then
-        printf '\r  %s (%s/%s) %s%*s\n' "✓" "$ok" "$_PROGRESS_TOTAL" "$summary" $((_PROGRESS_COLS - 6 - ${#ok} - ${#_PROGRESS_TOTAL} - ${#summary})) "" >&2
+        local text="($ok/$_PROGRESS_TOTAL) $summary"
+        local pad=$(( _PROGRESS_COLS - 4 - ${#text} ))
+        [ "$pad" -lt 0 ] && pad=0
+        printf '\r  %b✓%b %s%*s\n' "$E_GREEN" "$E_NC" "$text" "$pad" "" >&2
     elif [ "${AUDIO_TOOLS_QUIET:-no}" = "no" ]; then
         echo "  ✓ ($ok/$_PROGRESS_TOTAL) $summary" >&2
     fi

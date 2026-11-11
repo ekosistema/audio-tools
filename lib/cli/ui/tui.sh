@@ -10,54 +10,82 @@ fi
 CURSOR_HIDE="\033[?25l"
 CURSOR_SHOW="\033[?25h"
 
-# Print "║ <text centered in 62 columns> ║"
+# ── Look & feel ──────────────────────────────────────────────────────────────
+# Colors come from the shared palette (lib/utils/logging.sh): cyan frames and
+# numbers, magenta section titles, dim secondary text. With NO_COLOR, --no-color or
+# a non-terminal output the same text is printed without any escape code.
+
+_tui_rule() {  # _tui_rule <count> <char>
+    local pad
+    printf -v pad '%*s' "$1" ''
+    printf '%s' "${pad// /$2}"
+}
+
+# Banner line centered in the 62-column frame: ║  text  ║
 _tui_banner_line() {
-    local text="$1" width=62
+    local text="$1" style="${2:-$BRIGHT_WHITE}" width=62
     local left=$(( (width - ${#text}) / 2 ))
     local right=$(( width - ${#text} - left ))
-    printf '║%*s%s%*s║\n' "$left" "" "$text" "$right" ""
+    printf '%b║%b%*s%b%s%b%*s%b║%b\n' "$CYAN" "$NC" "$left" "" "$style" "$text" "$NC" "$right" "" "$CYAN" "$NC"
+}
+
+# Framed title for every screen: _tui_box "Convert Audio"
+_tui_box() {
+    local title="$1" width=52
+    printf '%b╔%s╗%b\n' "$CYAN" "$(_tui_rule "$width" '═')" "$NC"
+    printf '%b║%b  %b%s%b%*s%b║%b\n' "$CYAN" "$NC" "$BRIGHT_WHITE" "$title" "$NC" "$(( width - 2 - ${#title} ))" "" "$CYAN" "$NC"
+    printf '%b╚%s╝%b\n' "$CYAN" "$(_tui_rule "$width" '═')" "$NC"
+}
+
+# Menu entry:  _tui_item 1 "Convert audio"  ->  "  1)  Convert audio"
+_tui_item() {
+    printf ' %b%2s)%b  %s\n' "$CYAN" "$1" "$NC" "$2"
+}
+
+_tui_heading() {
+    printf '%b%s%b\n' "${BOLD}${MAGENTA}" "$1" "$NC"
 }
 
 show_main_menu() {
     # The version comes from the VERSION file so the banner can never go stale
     local version
     version=$(cat "$(dirname "${BASH_SOURCE[0]}")/../../../VERSION" 2>/dev/null || echo "unknown")
-    clear
-    echo "╔══════════════════════════════════════════════════════════════╗"
-    _tui_banner_line "Audio Tools v${version}"
-    _tui_banner_line "Batch process audio files with confidence"
-    echo "╚══════════════════════════════════════════════════════════════╝"
+    ui_clear
+    printf '%b╔%s╗%b\n' "$CYAN" "$(_tui_rule 62 '═')" "$NC"
+    _tui_banner_line "Audio Tools v${version}" "$BOLD"
+    _tui_banner_line "Batch process audio files with confidence" "$DIM"
+    printf '%b╚%s╝%b\n' "$CYAN" "$(_tui_rule 62 '═')" "$NC"
     echo ""
-    styled_echo "$BOLD" "CONVERSION & PROCESSING"
-    echo "  1)  Convert audio (any format → mp3/ogg/aac/flac)"
-    echo "  2)  Normalize loudness (EBU R128 -16 LUFS)"
-    echo "  3)  Trim silence (remove start/end silence)"
-    echo "  4)  Concatenate files (join multiple files)"
-    echo "  5)  Split at silence (segment a file)"
+    _tui_heading "CONVERSION & PROCESSING"
+    _tui_item 1 "Convert audio (any format → mp3/ogg/aac/flac)"
+    _tui_item 2 "Normalize loudness (EBU R128 -16 LUFS)"
+    _tui_item 3 "Trim silence (remove start/end silence)"
+    _tui_item 4 "Concatenate files (join multiple files)"
+    _tui_item 5 "Split at silence (segment a file)"
     echo ""
-    styled_echo "$BOLD" "CLEANUP & ORGANIZE"
-    echo "  6)  Sanitize filenames"
-    echo "  7)  Rename files with patterns"
-    echo "  8)  Scan & consolidate from subfolders"
-    echo "  9)  Remove short/long files"
+    _tui_heading "CLEANUP & ORGANIZE"
+    _tui_item 6 "Sanitize filenames"
+    _tui_item 7 "Rename files with patterns"
+    _tui_item 8 "Scan & consolidate from subfolders"
+    _tui_item 9 "Remove short/long files"
     echo ""
-    styled_echo "$BOLD" "DEDUPLICATION"
-    echo " 10)  Find duplicates (SHA256, keep files)"
-    echo " 11)  Dedup & remove duplicates (SHA256)"
+    _tui_heading "DEDUPLICATION"
+    _tui_item 10 "Find duplicates (SHA256, keep files)"
+    _tui_item 11 "Dedup & remove duplicates (SHA256)"
     echo ""
-    styled_echo "$BOLD" "INSPECT & SEARCH"
-    echo " 12)  List all audio files"
-    echo " 13)  Stats (directory statistics)"
-    echo " 14)  Show file metadata"
-    echo " 15)  Search & extract/delete files"
+    _tui_heading "INSPECT & SEARCH"
+    _tui_item 12 "List all audio files"
+    _tui_item 13 "Stats (directory statistics)"
+    _tui_item 14 "Show file metadata"
+    _tui_item 15 "Search & extract/delete files"
     echo ""
-    echo "  c)   Configuration"
-    echo "  h)   Help"
+    printf ' %b%2s)%b  %s\n' "$CYAN" "c" "$NC" "Configuration"
+    printf ' %b%2s)%b  %s\n' "$CYAN" "h" "$NC" "Help"
     echo ""
-    echo "  0)   Exit"
+    printf ' %b%2s)%b  %s\n' "$CYAN" "0" "$NC" "Exit"
     echo ""
-    echo "  ─────────────────────────────────────────────────────"
-    echo "  Maintained by CeleroLab — https://celerolab.com"
+    printf '  %b%s%b\n' "$DIM" "─────────────────────────────────────────────────────" "$NC"
+    printf '  %bMaintained by CeleroLab — https://celerolab.com%b\n' "$DIM" "$NC"
     echo ""
 }
 
@@ -96,10 +124,8 @@ run_interactive_menu() {
 }
 
 show_tui_help() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║                    Help                            ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Help"
     echo ""
     echo "Audio Tools lets you batch process audio files from the terminal."
     echo ""
@@ -147,10 +173,8 @@ _tui_prompt_path() {
 }
 
 menu_convert() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Convert Audio                            ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Convert Audio"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     read -r -p "Output format (mp3/ogg/aac/flac) [mp3]: " format
@@ -173,10 +197,8 @@ menu_convert() {
 }
 
 menu_normalize() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Normalize Loudness (EBU R128 -16 LUFS)   ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Normalize Loudness (EBU R128 -16 LUFS)"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
@@ -192,10 +214,8 @@ menu_normalize() {
 }
 
 menu_trim_silence() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Trim Silence                             ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Trim Silence"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
@@ -211,10 +231,8 @@ menu_trim_silence() {
 }
 
 menu_concat() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Concatenate Files                        ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Concatenate Files"
     echo ""
     read -r -e -p "Enter directory with files to join (or press Enter for current): " dir
     dir="${dir%"${dir##*[![:space:]]}"}"
@@ -234,10 +252,8 @@ menu_concat() {
 }
 
 menu_split_silence() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Split at Silence                         ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Split at Silence"
     echo ""
     read -r -e -p "Enter file path: " file
     file="${file%"${file##*[![:space:]]}"}"
@@ -256,10 +272,8 @@ menu_split_silence() {
 }
 
 menu_clean() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Sanitize Filenames                       ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Sanitize Filenames"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
@@ -274,10 +288,8 @@ menu_clean() {
 }
 
 menu_rename() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Rename Files with Patterns               ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Rename Files with Patterns"
     echo ""
     echo "Available tokens:"
     echo "  {n}     Sequential number (1, 2, 3...)"
@@ -303,10 +315,8 @@ menu_rename() {
 }
 
 menu_scan() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║      Consolidate from Subfolders                   ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Consolidate from Subfolders"
     echo ""
     read -r -e -p "Enter directory (or press Enter for current): " dir
     dir="${dir%"${dir##*[![:space:]]}"}"
@@ -326,10 +336,8 @@ menu_scan() {
 }
 
 menu_remove() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Remove Short/Long Files                  ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Remove Short/Long Files"
     echo ""
     echo "  1) Remove short files (below N seconds)"
     echo "  2) Remove long files (above N seconds)"
@@ -355,10 +363,8 @@ menu_remove() {
 }
 
 menu_find_dupes() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Find Duplicates (SHA256)                 ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Find Duplicates (SHA256)"
     echo ""
     echo "This will scan files by SHA256 hash and show duplicate groups."
     echo "No files will be deleted."
@@ -371,10 +377,8 @@ menu_find_dupes() {
 }
 
 menu_dedup() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Remove Duplicates (SHA256)               ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Remove Duplicates (SHA256)"
     echo ""
     echo "This will find exact duplicates by SHA256 and move them to trash."
     echo "The first file found is kept; duplicates are removed."
@@ -390,10 +394,8 @@ menu_dedup() {
 }
 
 menu_list() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           List Audio Files                         ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "List Audio Files"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
@@ -416,10 +418,8 @@ menu_list() {
 }
 
 menu_stats() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║           Directory Statistics                     ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Directory Statistics"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
@@ -429,10 +429,8 @@ menu_stats() {
 }
 
 menu_info() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║          File Metadata                             ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "File Metadata"
     echo ""
     read -r -e -p "Enter file path: " file
     file="${file%"${file##*[![:space:]]}"}"
@@ -445,10 +443,8 @@ menu_info() {
 }
 
 menu_search() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║        Search & Extract/Delete Files               ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Search & Extract/Delete Files"
     echo ""
     read -r -p "Search keyword: " query
     [ -z "$query" ] && return
@@ -497,10 +493,8 @@ _config_write() {
 
 menu_config_edit() {
     while true; do
-        clear
-        echo "╔════════════════════════════════════════════════════╗"
-        echo "║       Edit Configuration                          ║"
-        echo "╚════════════════════════════════════════════════════╝"
+        ui_clear
+        _tui_box "Edit Configuration"
         echo ""
 
         local cur_conv=$(_config_read "AUDIO_TOOLS_CONVERTED_DIR")
@@ -556,10 +550,8 @@ menu_config_edit() {
 }
 
 menu_config() {
-    clear
-    echo "╔════════════════════════════════════════════════════╗"
-    echo "║          Configuration                            ║"
-    echo "╚════════════════════════════════════════════════════╝"
+    ui_clear
+    _tui_box "Configuration"
     echo ""
     echo "  1) View current settings"
     echo "  2) Edit configuration"

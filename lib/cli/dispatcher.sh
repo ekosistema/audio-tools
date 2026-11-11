@@ -14,7 +14,8 @@ fi
 # Global flags (parsed before subcommand)
 declare -g AUDIO_TOOLS_QUIET="no"
 declare -g AUDIO_TOOLS_VERBOSE="no"
-declare -g AUDIO_TOOLS_NO_COLOR="no"
+declare -g AUDIO_TOOLS_NO_COLOR="${AUDIO_TOOLS_NO_COLOR:-no}"
+declare -g AUDIO_TOOLS_COLOR="${AUDIO_TOOLS_COLOR:-auto}"   # auto | always | never
 declare -g AUDIO_TOOLS_JSON="no"
 declare -g AUDIO_TOOLS_DRY_RUN="no"
 declare -g AUDIO_TOOLS_CONFIG=""
@@ -25,6 +26,16 @@ declare -g AUDIO_TOOLS_SUBCOMMAND=""
 declare -g AUDIO_TOOLS_REMAINING_ARGS=()
 
 # ── Flag Parsing ──
+
+# Set AUDIO_TOOLS_COLOR from the suffix of --color / --color=WHEN ("" or "=always|auto|never").
+_set_color_when() {
+    local when="${1#=}"
+    [ -z "$1" ] && when="always"
+    case "$when" in
+        auto|always|never) AUDIO_TOOLS_COLOR="$when" ;;
+        *) log_error "Invalid --color value '$when' (use auto, always or never)"; return 1 ;;
+    esac
+}
 
 parse_global_flags() {
     local parsed_count=0
@@ -46,6 +57,10 @@ parse_global_flags() {
                 ;;
             --no-color)
                 AUDIO_TOOLS_NO_COLOR="yes"; parsed_count=$((parsed_count + 1)); shift
+                ;;
+            --color|--color=*)
+                _set_color_when "${1#--color}" || return "$EX_USAGE"
+                parsed_count=$((parsed_count + 1)); shift
                 ;;
             --json)
                 AUDIO_TOOLS_JSON="yes"; parsed_count=$((parsed_count + 1)); shift
@@ -87,6 +102,9 @@ parse_global_flags() {
                 --dry-run)  AUDIO_TOOLS_DRY_RUN="yes"; parsed_count=$((parsed_count + 1)) ;;
                 --json)     AUDIO_TOOLS_JSON="yes"; parsed_count=$((parsed_count + 1)) ;;
                 --no-color) AUDIO_TOOLS_NO_COLOR="yes"; parsed_count=$((parsed_count + 1)) ;;
+                --color|--color=*)
+                    _set_color_when "${arg#--color}" || return "$EX_USAGE"
+                    parsed_count=$((parsed_count + 1)) ;;
                 --quiet)    AUDIO_TOOLS_QUIET="yes"; parsed_count=$((parsed_count + 1)) ;;
                 --verbose)  AUDIO_TOOLS_VERBOSE="yes"; parsed_count=$((parsed_count + 1)) ;;
                 --force)    AUDIO_TOOLS_FORCE="yes"; parsed_count=$((parsed_count + 1)) ;;
@@ -159,25 +177,14 @@ dispatch_command() {
 # ── Environment Setup ──
 
 setup_environment() {
-    # Respect NO_COLOR env var
-    if [ -n "${NO_COLOR:-}" ]; then
-        AUDIO_TOOLS_NO_COLOR="yes"
-    fi
-
-    # Disable colors if not a TTY (piped output)
-    if [ ! -t 1 ]; then
-        AUDIO_TOOLS_NO_COLOR="yes"
-    fi
-
-    # If json mode requested, silence colored output
-    if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
-        AUDIO_TOOLS_NO_COLOR="yes"
-    fi
+    # Colors: decided per stream by the palette in logging.sh (NO_COLOR, --no-color,
+    # --color=WHEN, --json, TERM=dumb, and whether stdout/stderr is a terminal).
+    export AUDIO_TOOLS_NO_COLOR AUDIO_TOOLS_COLOR
+    init_colors
 
     # Export global state so sourced commands can access it
     export AUDIO_TOOLS_QUIET
     export AUDIO_TOOLS_VERBOSE
-    export AUDIO_TOOLS_NO_COLOR
     export AUDIO_TOOLS_JSON
     export AUDIO_TOOLS_DRY_RUN
     export AUDIO_TOOLS_CONFIG
@@ -199,7 +206,7 @@ validate_dispatch() {
 # Usage: dispatch "$@"
 # Parses args, sets up environment, and dispatches to subcommand
 dispatch() {
-    parse_global_flags "$@"
+    parse_global_flags "$@" || return $?
 
     setup_environment
     validate_dispatch || return $?

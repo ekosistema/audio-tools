@@ -63,7 +63,7 @@ convert_to_mp3() {
         for file in "${files[@]}"; do
             local filename; filename=$(basename "$file")
             local output="${output_folder}/${filename%.*}$ext"
-            echo "  would convert: $file -> $output"
+            printf '  %bwould convert:%b %s -> %s\n' "${YELLOW:-}" "${NC:-}" "$file" "$output"
         done
         return 0
     fi

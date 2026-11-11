@@ -51,13 +51,13 @@ audio_info() {
 
     echo ""
     styled_echo "$DARK_GRAY" "── ${BOLD}${BRIGHT_WHITE}$(basename "$file")${NC}${DARK_GRAY} ──${NC}"
-    echo -e "  ${BOLD}Format:${NC}      ${format_name:-N/A}"
-    echo -e "  ${BOLD}Codec:${NC}       ${codec:-N/A}"
-    echo -e "  ${BOLD}Duration:${NC}    $duration_str"
-    echo -e "  ${BOLD}Bitrate:${NC}     $bitrate_str"
-    echo -e "  ${BOLD}Sample rate:${NC} ${sample_rate:-N/A} Hz"
-    echo -e "  ${BOLD}Channels:${NC}    ${channels:-N/A}"
-    echo -e "  ${BOLD}Size:${NC}        $size_hr"
+    echo -e "  ${CYAN}Format:${NC}      ${format_name:-N/A}"
+    echo -e "  ${CYAN}Codec:${NC}       ${codec:-N/A}"
+    echo -e "  ${CYAN}Duration:${NC}    $duration_str"
+    echo -e "  ${CYAN}Bitrate:${NC}     $bitrate_str"
+    echo -e "  ${CYAN}Sample rate:${NC} ${sample_rate:-N/A} Hz"
+    echo -e "  ${CYAN}Channels:${NC}    ${channels:-N/A}"
+    echo -e "  ${CYAN}Size:${NC}        $size_hr"
     echo ""
 }
 
@@ -94,13 +94,13 @@ audio_stats() {
 
     echo ""
     styled_echo "$DARK_GRAY" "── ${BOLD}${BRIGHT_WHITE}Audio Stats${NC}${DARK_GRAY} ────────────────────────────────${NC}"
-    echo -e "  ${BOLD}Files:${NC}        $total"
-    echo -e "  ${BOLD}Total duration:${NC} ${dur_min}m ${dur_sec}s"
-    echo -e "  ${BOLD}Total size:${NC}    $size_mb MB"
+    echo -e "  ${CYAN}Files:${NC}        $total"
+    echo -e "  ${CYAN}Total duration:${NC} ${dur_min}m ${dur_sec}s"
+    echo -e "  ${CYAN}Total size:${NC}    $size_mb MB"
     echo ""
     styled_echo "$DIM" "  By format:"
     for fmt in "${!format_counts[@]}"; do
-        echo -e "    ${BOLD}$fmt${NC}  ${format_counts[$fmt]} files"
+        echo -e "    ${BOLD}${BRIGHT_WHITE}$fmt${NC}  ${format_counts[$fmt]} files"
     done
     echo ""
 }

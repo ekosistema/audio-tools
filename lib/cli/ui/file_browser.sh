@@ -90,7 +90,7 @@ browse_files_simple() {
     fi
 
     # Display menu
-    clear
+    ui_clear
     echo "$title"
     echo "Directory: $dir"
     echo ""
@@ -164,7 +164,7 @@ preview_file() {
 
     [ ! -f "$file" ] && { log_error "File not found"; return 1; }
 
-    clear
+    ui_clear
     echo "╔════════════════════════════════════════════════════╗"
     echo "║  File Preview: $(basename "$file")"
     echo "╚════════════════════════════════════════════════════╝"

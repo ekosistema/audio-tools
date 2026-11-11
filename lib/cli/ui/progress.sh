@@ -114,7 +114,7 @@ show_detailed_progress() {
     local total=$3
     local detail="${4:-}"
 
-    clear
+    ui_clear
     echo "╔════════════════════════════════════════════════════╗"
     echo "║  $title"
     echo "╚════════════════════════════════════════════════════╝"

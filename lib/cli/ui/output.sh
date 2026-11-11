@@ -21,23 +21,15 @@ init_output() {
         OUTPUT_FORMAT="json"
     fi
 
-    # Disable colors if requested
-    if [ "$OUTPUT_NO_COLOR" = "yes" ] || [ -n "${NO_COLOR:-}" ]; then
-        # Set color vars to empty
-        export COLOR_RESET=""
-        export COLOR_GREEN=""
-        export COLOR_YELLOW=""
-        export COLOR_RED=""
-        export COLOR_CYAN=""
-        export COLOR_BLUE=""
-    else
-        export COLOR_RESET="\033[0m"
-        export COLOR_GREEN="\033[0;32m"
-        export COLOR_YELLOW="\033[0;33m"
-        export COLOR_RED="\033[0;31m"
-        export COLOR_CYAN="\033[0;36m"
-        export COLOR_BLUE="\033[0;34m"
-    fi
+    # Colors come from the shared palette in logging.sh, which honours --no-color,
+    # NO_COLOR, --color=WHEN and whether the stream is a terminal.
+    init_colors
+    export COLOR_RESET="$NC"
+    export COLOR_GREEN="$GREEN"
+    export COLOR_YELLOW="$YELLOW"
+    export COLOR_RED="$RED"
+    export COLOR_CYAN="$CYAN"
+    export COLOR_BLUE="$BLUE"
 }
 
 # ── Output Helpers ──
@@ -106,7 +98,7 @@ output_error() {
     if [ "$OUTPUT_FORMAT" = "json" ]; then
         _output_status_json error "$message" >&2
     else
-        printf '%b%s\n' "${COLOR_RED}✗${COLOR_RESET} " "$message" >&2
+        printf '%b%s\n' "${E_RED}✗${E_NC} " "$message" >&2
     fi
 }
 
@@ -157,13 +149,14 @@ output_table_row() {
 # Print one table line: cells padded to the column widths (no trailing spaces).
 # Usage: _table_print_line <cell>...   (widths come from TABLE_WIDTHS)
 _table_print_line() {
-    local i last=$(( $# - 1 )) sep=""
+    local i last=$(( $# - 1 )) sep="" style="${_TABLE_STYLE:-}" end=""
+    [ -n "$style" ] && end="$NC"
     local -a cells=("$@")
     for i in "${!cells[@]}"; do
         if [ "$i" -eq "$last" ]; then
-            printf '%s%s\n' "$sep" "${cells[i]}"
+            printf '%s%b%s%b\n' "$sep" "$style" "${cells[i]}" "$end"
         else
-            printf '%s%-*s' "$sep" "${TABLE_WIDTHS[i]}" "${cells[i]}"
+            printf '%s%b%-*s%b' "$sep" "$style" "${TABLE_WIDTHS[i]}" "${cells[i]}" "$end"
         fi
         sep="  "
     done
@@ -200,13 +193,13 @@ output_table_footer() {
             done
         done
 
-        _table_print_line "${TABLE_COLS[@]}"
+        _TABLE_STYLE="${BOLD}${CYAN}" _table_print_line "${TABLE_COLS[@]}"
         local -a rule=()
         for w in "${TABLE_WIDTHS[@]}"; do
             printf -v sep '%*s' "$w" ''
             rule+=("${sep// /─}")
         done
-        _table_print_line "${rule[@]}"
+        _TABLE_STYLE="$DIM" _table_print_line "${rule[@]}"
         for row in "${TABLE_ROWS[@]}"; do
             IFS=$'\x1f' read -r -a cells <<< "$row"
             _table_print_line "${cells[@]}"
@@ -215,7 +208,7 @@ output_table_footer() {
         if [ "$OUTPUT_QUIET" != "yes" ]; then
             local total=0
             [ ${#TABLE_ROWS[@]} -gt 0 ] && total=${#TABLE_ROWS[@]}
-            echo "Total: $total items"
+            printf '%b%s%b\n' "$DIM" "Total: $total items" "$NC"
         fi
     fi
 

@@ -40,7 +40,7 @@ _processor_each_file() {
         local output="${outdir}/${outname}"
 
         if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
-            echo "  would process: $file -> $output"
+            printf '  %bwould process:%b %s -> %s\n' "${YELLOW:-}" "${NC:-}" "$file" "$output"
             continue
         fi
 
@@ -97,7 +97,7 @@ audio_split_silence() {
         local start=0
         for seg_end in "${segments[@]}"; do
             local seg_name="${name}_segment_0001.${ext}"
-            echo "  would create: ${outdir}/${seg_name} (${start}s - ${seg_end}s)"
+            printf '  %bwould create:%b %s (%ss - %ss)\n' "${YELLOW:-}" "${NC:-}" "${outdir}/${seg_name}" "$start" "$seg_end"
             start="$seg_end"
         done
         return 0

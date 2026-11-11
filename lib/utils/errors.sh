@@ -33,7 +33,7 @@ confirm_prompt() {
     [ "${AUDIO_TOOLS_FORCE:-no}" = "yes" ] && return 0
     # A dry run changes nothing, so there is nothing to confirm
     [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] && return 0
-    printf '%s (yes/no): ' "$question" >&2
+    printf '%b%s%b (yes/no): ' "${E_YELLOW:-}" "$question" "${E_NC:-}" >&2
     if ! IFS= read -r response; then
         printf '\n' >&2
         die "$EX_USAGE" "Confirmation required but no input is available (stdin is not interactive). Re-run with --force to proceed, or --dry-run to preview."

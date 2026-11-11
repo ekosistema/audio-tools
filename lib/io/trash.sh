@@ -90,7 +90,7 @@ move_to_trash() {
 
     # Single chokepoint for destructive operations: --dry-run must never move anything.
     if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
-        printf '  would move to trash: %s\n' "$file"
+        printf '  %bwould move to trash:%b %s\n' "${YELLOW:-}" "${NC:-}" "$file"
         return 0
     fi
 
