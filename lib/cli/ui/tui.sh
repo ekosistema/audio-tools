@@ -49,7 +49,10 @@ _tui_heading() {
 show_main_menu() {
     # The version comes from the VERSION file so the banner can never go stale
     local version
-    version=$(cat "$(dirname "${BASH_SOURCE[0]}")/../../../VERSION" 2>/dev/null || echo "unknown")
+    # tr strips a stray CR (VERSION checked out with CRLF on Windows), which would
+    # otherwise return the cursor to column 0 and overwrite the banner frame
+    version=$(tr -d '\r\n ' < "$(dirname "${BASH_SOURCE[0]}")/../../../VERSION" 2>/dev/null || true)
+    version="${version:-unknown}"
     ui_clear
     printf '%b╔%s╗%b\n' "$CYAN" "$(_tui_rule 62 '═')" "$NC"
     _tui_banner_line "Audio Tools v${version}" "$BOLD"

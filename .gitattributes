@@ -6,3 +6,4 @@ bin/audio-tools text eol=lf
 *.bash text eol=lf
 *.yml text eol=lf
 tests/golden/* text eol=lf
+VERSION text eol=lf

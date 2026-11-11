@@ -2,7 +2,8 @@
 
 _name_desc() {
     local version
-    version=$(cat "$(dirname "${BASH_SOURCE[0]}")/../../VERSION" 2>/dev/null || echo "unknown")
+    version=$(tr -d '\r\n ' < "$(dirname "${BASH_SOURCE[0]}")/../../VERSION" 2>/dev/null || true)
+    version="${version:-unknown}"
     echo "audio-tools v$version — A Bash Suite for Audio Management"
 }
 
@@ -108,6 +109,7 @@ show_help() {
 
 show_version() {
     local version
-    version=$(cat "$(dirname "${BASH_SOURCE[0]}")/../../VERSION" 2>/dev/null || echo "unknown")
+    version=$(tr -d '\r\n ' < "$(dirname "${BASH_SOURCE[0]}")/../../VERSION" 2>/dev/null || true)
+    version="${version:-unknown}"
     echo "audio-tools v$version"
 }
