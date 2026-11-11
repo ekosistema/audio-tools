@@ -1,0 +1,10 @@
+# ShellCheck configuration for audio-tools
+shell=bash
+external-sources=true
+source-path=SCRIPTDIR
+# Sourced library files have no shebang
+disable=SC2148
+# Dynamic sourcing of modules via $(dirname "${BASH_SOURCE[0]}")
+disable=SC1090,SC1091
+# Style-only: declare-and-assign in one line, and vars consumed by sourcing files
+disable=SC2155,SC2034

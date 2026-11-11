@@ -168,7 +168,7 @@ EOF
         tree)
             echo "$(basename "$dir")/"
             for file in "${files[@]}"; do
-                local rel_path="${file#$dir/}"
+                local rel_path="${file#"$dir"/}"
                 echo "  ├── $rel_path"
             done
             echo ""

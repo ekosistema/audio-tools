@@ -102,9 +102,9 @@ browse_files_simple() {
     echo ""
 
     if [ "$multi" = "yes" ]; then
-        read -p "Enter file numbers (space-separated) or 'all' for all: " selection
+        read -r -p "Enter file numbers (space-separated) or 'all' for all: " selection
     else
-        read -p "Enter file number: " selection
+        read -r -p "Enter file number: " selection
     fi
 
     # Parse selection
@@ -139,13 +139,13 @@ browse_directories() {
 
     if ! command -v fzf >/dev/null 2>&1; then
         # Fallback: simple input
-        read -p "$title [$root]: " dir
+        read -r -p "$title [$root]: " dir
         echo "${dir:-$root}"
         return 0
     fi
 
     # Use find to list directories, then select with fzf
-    local selected=$(find "$root" -type d -maxdepth 3 2>/dev/null | \
+    local selected; selected=$(find "$root" -type d -maxdepth 3 2>/dev/null | \
         fzf --preview 'ls -la {}' --preview-window="right:40%")
 
     if [ -z "$selected" ]; then
@@ -197,7 +197,7 @@ preview_file() {
 
     echo ""
     echo "Press Enter to close..."
-    read
+    read -r
 }
 
 # ── Export ──

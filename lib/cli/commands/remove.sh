@@ -112,7 +112,7 @@ _remove_short() {
 
     # Confirmation
     if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        read -p "Delete ${#files[@]} short files? (yes/no): " response
+        read -r -p "Delete ${#files[@]} short files? (yes/no): " response
         [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
     fi
 
@@ -188,7 +188,7 @@ _remove_long() {
 
     # Confirmation
     if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        read -p "Delete ${#files[@]} long files? (yes/no): " response
+        read -r -p "Delete ${#files[@]} long files? (yes/no): " response
         [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
     fi
 

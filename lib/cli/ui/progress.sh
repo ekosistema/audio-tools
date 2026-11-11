@@ -29,8 +29,8 @@ stop_spinner() {
     local spinner_pid="$1"
     local status="${2:-}"
 
-    kill $spinner_pid 2>/dev/null
-    wait $spinner_pid 2>/dev/null
+    kill "$spinner_pid" 2>/dev/null
+    wait "$spinner_pid" 2>/dev/null
 
     if [ "$status" = "success" ]; then
         echo -e "\r✓ Done"
@@ -52,7 +52,7 @@ show_progress_bar() {
     local total=$2
     local message="${3:-Progress}"
 
-    if [ $total -eq 0 ]; then
+    if [ "$total" -eq 0 ]; then
         total=1
     fi
 
@@ -95,7 +95,7 @@ show_percentage() {
     local total=$2
     local label="${3:-Items}"
 
-    if [ $total -eq 0 ]; then
+    if [ "$total" -eq 0 ]; then
         return
     fi
 
@@ -128,7 +128,7 @@ show_detailed_progress() {
         echo "Current: $detail"
     fi
 
-    if [ $current -gt 0 ] && [ $total -gt 0 ]; then
+    if [ "$current" -gt 0 ] && [ "$total" -gt 0 ]; then
         local elapsed=0  # Would need to track this elsewhere
         local rate=$((current / (elapsed + 1)))
         local remaining=$((total - current))
@@ -146,16 +146,16 @@ calculate_eta() {
     local current=$2
     local total=$3
 
-    if [ $current -eq 0 ] || [ $total -eq 0 ]; then
+    if [ "$current" -eq 0 ] || [ "$total" -eq 0 ]; then
         echo "??:??"
         return
     fi
 
     local elapsed=$(($(date +%s) - start_time))
-    [ $elapsed -eq 0 ] && elapsed=1
+    [ "$elapsed" -eq 0 ] && elapsed=1
 
     local rate=$((current / elapsed))
-    [ $rate -eq 0 ] && rate=1
+    [ "$rate" -eq 0 ] && rate=1
 
     local remaining=$((total - current))
     local eta_seconds=$((remaining / rate))
@@ -171,9 +171,9 @@ calculate_eta() {
 format_duration_compact() {
     local seconds=$1
 
-    if [ $seconds -lt 60 ]; then
+    if [ "$seconds" -lt 60 ]; then
         echo "${seconds}s"
-    elif [ $seconds -lt 3600 ]; then
+    elif [ "$seconds" -lt 3600 ]; then
         local mins=$((seconds / 60))
         local secs=$((seconds % 60))
         printf "%dm %ds\n" "$mins" "$secs"

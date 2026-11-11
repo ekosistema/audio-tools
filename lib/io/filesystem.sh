@@ -142,10 +142,10 @@ sanitize_filename() {
 _format_rename() {
     local pattern="$1" orig="$2" num="$3"
     local base="${orig%.*}" ext="${orig##*.}"
-    local result="$pattern"
-    result="${result//\{n\}/$num}"
-    result="${result//\{orig\}/$base}"
-    result="${result//\{ext\}/$ext}"
-    result="${result//\{date\}/$(date +%Y%m%d)_$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom 2>/dev/null | head -c6)}"
-    echo "$result"
+    local formatted="$pattern"
+    formatted="${formatted//\{n\}/$num}"
+    formatted="${formatted//\{orig\}/$base}"
+    formatted="${formatted//\{ext\}/$ext}"
+    formatted="${formatted//\{date\}/$(date +%Y%m%d)_$(LC_ALL=C tr -dc 'a-zA-Z0-9' < /dev/urandom 2>/dev/null | head -c6)}"
+    echo "$formatted"
 }

@@ -17,8 +17,8 @@ CONVERSION
     concat           Concatenate multiple audio files into one
 
 CLEANUP & ORGANIZE
-    clean-names      Replace spaces with _, strip special chars
-    rename           Batch rename with patterns ({n}, {orig}, {date})
+    clean            Replace spaces with _, strip special chars
+    rename           Batch rename with patterns ({n}, {orig}, {date}, {ext})
     scan             Copy all audio from subfolders into one dir
     remove-short     Trash files shorter than --threshold
     remove-long      Trash files longer than --threshold

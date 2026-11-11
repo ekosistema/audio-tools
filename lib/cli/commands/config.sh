@@ -183,7 +183,7 @@ cmd_config_reset() {
 
     # Confirmation
     if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        read -p "Delete config file? (yes/no): " response
+        read -r -p "Delete config file? (yes/no): " response
         [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
     fi
 

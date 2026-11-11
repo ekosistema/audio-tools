@@ -55,7 +55,7 @@ EOF
 run_interactive_menu() {
     while true; do
         show_main_menu
-        read -p "Enter your choice: " choice
+        read -r -p "Enter your choice: " choice
 
         case "$choice" in
             1) menu_convert ;;
@@ -115,12 +115,12 @@ show_tui_help() {
     echo ""
     echo "For detailed help: audio-tools <command> --help"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 _tui_prompt_path() {
     local var_name="$1" prompt="$2" user_path
-    read -e -p "$prompt " user_path
+    read -r -e -p "$prompt " user_path
     user_path="${user_path%"${user_path##*[![:space:]]}"}"
     user_path="${user_path:-.}"
     if [ ! -e "$user_path" ]; then
@@ -139,22 +139,22 @@ menu_convert() {
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
-    read -p "Output format (mp3/ogg/aac/flac) [mp3]: " format
+    read -r -p "Output format (mp3/ogg/aac/flac) [mp3]: " format
     format="${format:-mp3}"
-    read -p "Bitrate (192k/256k/320k) [320k]: " bitrate
+    read -r -p "Bitrate (192k/256k/320k) [320k]: " bitrate
     bitrate="${bitrate:-320k}"
-    read -p "Output directory name [converted_mp3]: " output
+    read -r -p "Output directory name [converted_mp3]: " output
     output="${output:-converted_mp3}"
     echo ""
     echo "Converting audio in: $dir"
     echo "Format: $format, Bitrate: $bitrate"
     echo "Output: $output"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" convert "$dir" -f "$format" -b "$bitrate" -o "$output"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -169,11 +169,11 @@ menu_normalize() {
     echo "This will normalize audio in: $dir"
     echo "Output goes to: ${dir}/processed/"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" normalize "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -188,11 +188,11 @@ menu_trim_silence() {
     echo "This will remove leading and trailing silence from files in: $dir"
     echo "Output goes to: ${dir}/processed/"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" trim-silence "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -202,7 +202,7 @@ menu_concat() {
     echo "║           Concatenate Files                        ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
-    read -e -p "Enter directory with files to join (or press Enter for current): " dir
+    read -r -e -p "Enter directory with files to join (or press Enter for current): " dir
     dir="${dir%"${dir##*[![:space:]]}"}"
     dir="${dir:-.}"
     [ ! -d "$dir" ] && { echo "Directory not found!"; sleep 2; return; }
@@ -211,11 +211,11 @@ menu_concat() {
     echo "Files are concatenated in alphabetical order."
     echo "Output: ${dir}/concatenated.mp3"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" concat "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -225,7 +225,7 @@ menu_split_silence() {
     echo "║           Split at Silence                         ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
-    read -e -p "Enter file path: " file
+    read -r -e -p "Enter file path: " file
     file="${file%"${file##*[![:space:]]}"}"
     [ -z "$file" ] && return
     [ ! -f "$file" ] && { echo "File not found!"; sleep 2; return; }
@@ -233,11 +233,11 @@ menu_split_silence() {
     echo "This will split the file at silence points."
     echo "Output goes to: $(dirname "$file")/$(basename "$file" .*) _split/"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" split-silence "$file"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -251,11 +251,11 @@ menu_clean() {
     echo ""
     echo "This will replace spaces with underscores and remove special characters."
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" clean "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -273,18 +273,18 @@ menu_rename() {
     echo ""
     echo "Example: track_{n}_{orig}"
     echo ""
-    read -p "Enter pattern: " pattern
+    read -r -p "Enter pattern: " pattern
     [ -z "$pattern" ] && return
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
     echo "Preview of rename:"
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" rename "$dir" --pattern "$pattern" --dry-run
     echo ""
-    read -p "Apply this rename? (yes/no): " confirm
+    read -r -p "Apply this rename? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" rename "$dir" --pattern "$pattern"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -294,20 +294,20 @@ menu_scan() {
     echo "║      Consolidate from Subfolders                   ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
-    read -e -p "Enter directory (or press Enter for current): " dir
+    read -r -e -p "Enter directory (or press Enter for current): " dir
     dir="${dir%"${dir##*[![:space:]]}"}"
     dir="${dir:-.}"
     [ ! -d "$dir" ] && { echo "Directory not found!"; sleep 2; return; }
-    read -p "Output directory name [ALL_AUDIOS]: " output
+    read -r -p "Output directory name [ALL_AUDIOS]: " output
     output="${output:-ALL_AUDIOS}"
     echo ""
     echo "This will copy all audio files from subfolders to: $output"
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" scan "$dir" -o "$output"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -320,23 +320,23 @@ menu_remove() {
     echo "  1) Remove short files (below N seconds)"
     echo "  2) Remove long files (above N seconds)"
     echo ""
-    read -p "Select option (1-2): " rm_choice
+    read -r -p "Select option (1-2): " rm_choice
     case "$rm_choice" in
         1) mode="short"; prompt="below" ;;
         2) mode="long"; prompt="above" ;;
         *) return ;;
     esac
-    read -p "Threshold in seconds [2]: " threshold
+    read -r -p "Threshold in seconds [2]: " threshold
     threshold="${threshold:-2}"
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
     echo "Files $prompt $threshold seconds will be moved to trash."
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" remove "$mode" -t "$threshold" "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -353,7 +353,7 @@ menu_find_dupes() {
     echo ""
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" find-dupes "$dir"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 menu_dedup() {
@@ -367,11 +367,11 @@ menu_dedup() {
     echo ""
     _tui_prompt_path dir "Enter file or directory (or press Enter for current):" || return
     echo ""
-    read -p "Continue? (yes/no): " confirm
+    read -r -p "Continue? (yes/no): " confirm
     if [ "$confirm" = "yes" ]; then
         bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" dedup "$dir"
         echo ""
-        read -p "Press Enter to continue..."
+        read -r -p "Press Enter to continue..."
     fi
 }
 
@@ -387,7 +387,7 @@ menu_list() {
     echo "  2) Table format (with metadata)"
     echo "  3) Tree view"
     echo ""
-    read -p "Select format (1-3) [2]: " fmt_choice
+    read -r -p "Select format (1-3) [2]: " fmt_choice
     fmt_choice="${fmt_choice:-2}"
     case "$fmt_choice" in
         1) fmt="simple" ;;
@@ -398,7 +398,7 @@ menu_list() {
     echo ""
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" list "$dir" --format "$fmt"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 menu_stats() {
@@ -411,7 +411,7 @@ menu_stats() {
     echo ""
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" stats "$dir"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 menu_info() {
@@ -420,14 +420,14 @@ menu_info() {
     echo "║          File Metadata                             ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
-    read -e -p "Enter file path: " file
+    read -r -e -p "Enter file path: " file
     file="${file%"${file##*[![:space:]]}"}"
     [ -z "$file" ] && return
     [ ! -f "$file" ] && { echo "File not found!"; sleep 2; return; }
     echo ""
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" info "$file"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 menu_search() {
@@ -436,14 +436,14 @@ menu_search() {
     echo "║        Search & Extract/Delete Files               ║"
     echo "╚════════════════════════════════════════════════════╝"
     echo ""
-    read -p "Search keyword: " query
+    read -r -p "Search keyword: " query
     [ -z "$query" ] && return
     echo ""
     echo "  1) List matches"
     echo "  2) Extract matches to folder"
     echo "  3) Delete matches"
     echo ""
-    read -p "Select operation (1-3): " op_choice
+    read -r -p "Select operation (1-3): " op_choice
     case "$op_choice" in
         1) op="list" ;;
         2) op="extract" ;;
@@ -454,7 +454,7 @@ menu_search() {
     echo ""
     bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" search "$query" --operation "$op" "$dir"
     echo ""
-    read -p "Press Enter to continue..."
+    read -r -p "Press Enter to continue..."
 }
 
 _config_read() {
@@ -507,15 +507,15 @@ menu_config_edit() {
         echo "  5) Default bitrate               [$cur_bit]"
         echo "  0) Back to config menu"
         echo ""
-        read -p "Select option (0-5): " opt
+        read -r -p "Select option (0-5): " opt
         case "$opt" in
             1)
-                read -p "Output directory for converted files [$cur_conv]: " val
+                read -r -p "Output directory for converted files [$cur_conv]: " val
                 val="${val:-$cur_conv}"
                 _config_write "AUDIO_TOOLS_CONVERTED_DIR" "$val"
                 ;;
             2)
-                read -p "Directory name for scan [$cur_scan]: " val
+                read -r -p "Directory name for scan [$cur_scan]: " val
                 val="${val:-$cur_scan}"
                 _config_write "AUDIO_TOOLS_SCAN_DIR" "$val"
                 ;;
@@ -527,12 +527,12 @@ menu_config_edit() {
                 fi
                 ;;
             4)
-                read -p "Format (mp3/ogg/aac/flac) [$cur_fmt]: " val
+                read -r -p "Format (mp3/ogg/aac/flac) [$cur_fmt]: " val
                 val="${val:-$cur_fmt}"
                 _config_write "AUDIO_TOOLS_FORMAT" "$val"
                 ;;
             5)
-                read -p "Bitrate (192k/256k/320k) [$cur_bit]: " val
+                read -r -p "Bitrate (192k/256k/320k) [$cur_bit]: " val
                 val="${val:-$cur_bit}"
                 _config_write "AUDIO_TOOLS_BITRATE" "$val"
                 ;;
@@ -552,22 +552,22 @@ menu_config() {
     echo "  3) Reset to defaults"
     echo "  0) Back"
     echo ""
-    read -p "Select option (0-3): " cfg_choice
+    read -r -p "Select option (0-3): " cfg_choice
     case "$cfg_choice" in
         1)
             echo ""
             bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" config list
             echo ""
-            read -p "Press Enter to continue..."
+            read -r -p "Press Enter to continue..."
             ;;
         2)
             menu_config_edit
             ;;
         3)
-            read -p "Are you sure? (yes/no): " confirm
+            read -r -p "Are you sure? (yes/no): " confirm
             [ "$confirm" = "yes" ] && bash "$AUDIO_TOOLS_BIN_DIR/audio-tools" config reset
             echo ""
-            read -p "Press Enter to continue..."
+            read -r -p "Press Enter to continue..."
             ;;
     esac
 }

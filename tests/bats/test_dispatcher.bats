@@ -140,14 +140,22 @@ teardown() {
 # ── Shellcheck ──
 
 @test "dispatcher passes shellcheck" {
+    command -v shellcheck >/dev/null 2>&1 || skip "shellcheck not installed"
     run shellcheck -x lib/cli/dispatcher.sh
     [ "$status" -eq 0 ]
 }
 
 @test "all commands pass shellcheck" {
+    command -v shellcheck >/dev/null 2>&1 || skip "shellcheck not installed"
     for file in lib/cli/commands/*.sh; do
         [ -f "$file" ] || continue
         run shellcheck -x "$file"
-        [ "$status" -eq 0 ] || (echo "Shellcheck failed for $file"; false)
+        [ "$status" -eq 0 ] || { echo "Shellcheck failed for $file"; false; }
     done
+}
+
+@test "all shell sources pass shellcheck" {
+    command -v shellcheck >/dev/null 2>&1 || skip "shellcheck not installed"
+    run shellcheck -x bin/audio-tools lib/*/*.sh lib/cli/*/*.sh
+    [ "$status" -eq 0 ]
 }

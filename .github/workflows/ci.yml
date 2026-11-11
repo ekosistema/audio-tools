@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        run: shellcheck -x bin/audio-tools lib/*/*.sh lib/cli/*/*.sh
+
+  test:
+    name: Bats (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg bats shellcheck
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          # macOS ships Bash 3.2; audio-tools needs Bash 4+
+          brew install bash ffmpeg bats-core shellcheck coreutils
+          echo "$(brew --prefix)/bin" >> "$GITHUB_PATH"
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -1
+          ffmpeg -version | head -1
+          bats --version
+
+      - name: Run tests
+        run: bats tests/bats/
+
+  smoke:
+    name: Smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: CLI smoke
+        run: |
+          bash bin/audio-tools --version
+          bash bin/audio-tools --help > /dev/null
+          bash bin/audio-tools list tests/fixtures/audio

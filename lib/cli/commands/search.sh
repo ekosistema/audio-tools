@@ -143,7 +143,7 @@ EOF
         delete)
             # Confirmation
             if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-                read -p "Delete ${#files[@]} file(s)? (yes/no): " response
+                read -r -p "Delete ${#files[@]} file(s)? (yes/no): " response
                 [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
             fi
 

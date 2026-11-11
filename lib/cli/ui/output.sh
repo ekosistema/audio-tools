@@ -115,7 +115,7 @@ output_table_header() {
     sep=""
     for width in "${TABLE_WIDTHS[@]}"; do
         printf "%s" "$sep"
-        printf '%0.s─' $(seq 1 $width)
+        printf '%0.s─' $(seq 1 "$width")
         sep="  "
     done
     echo ""
@@ -133,8 +133,8 @@ output_table_row() {
     # Update widths if needed
     for ((i=0; i<$#; i++)); do
         local val="${row_args[$i]}"
-        if [ ${#val} -gt ${TABLE_WIDTHS[$i]:-0} ]; then
-            TABLE_WIDTHS[$i]=${#val}
+        if [ ${#val} -gt "${TABLE_WIDTHS[i]:-0}" ]; then
+            TABLE_WIDTHS[i]=${#val}
         fi
     done
 
@@ -204,7 +204,7 @@ output_json() {
     shift
 
     # Build JSON object from remaining args (key=value pairs)
-    printf '{"'$key'":{'
+    printf "{\"%s\":{" "$key"
     local first=true
     while [ $# -gt 0 ]; do
         if [ "$first" = true ]; then
@@ -226,11 +226,11 @@ output_json() {
 
 format_size() {
     local bytes=$1
-    if [ $bytes -lt 1024 ]; then
+    if [ "$bytes" -lt 1024 ]; then
         echo "${bytes}B"
-    elif [ $bytes -lt 1048576 ]; then
+    elif [ "$bytes" -lt 1048576 ]; then
         echo "$((bytes / 1024))KB"
-    elif [ $bytes -lt 1073741824 ]; then
+    elif [ "$bytes" -lt 1073741824 ]; then
         echo "$((bytes / 1048576))MB"
     else
         echo "$((bytes / 1073741824))GB"
@@ -243,9 +243,9 @@ format_duration() {
     local minutes=$(((seconds % 3600) / 60))
     local secs=$((seconds % 60))
 
-    if [ $hours -gt 0 ]; then
+    if [ "$hours" -gt 0 ]; then
         printf "%dh %dm %ds" $hours $minutes $secs
-    elif [ $minutes -gt 0 ]; then
+    elif [ "$minutes" -gt 0 ]; then
         printf "%dm %ds" $minutes $secs
     else
         printf "%ds" $secs

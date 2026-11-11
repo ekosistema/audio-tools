@@ -35,9 +35,8 @@ audio_find_dupes() {
     local dupes_found=0
     echo ""
     for hash in "${!hash_groups[@]}"; do
-        local IFS='|'
-        local files_in_group=(${hash_groups[$hash]})
-        unset IFS
+        local -a files_in_group=()
+        IFS='|' read -r -a files_in_group <<< "${hash_groups[$hash]}"
         [ ${#files_in_group[@]} -lt 2 ] && continue
         dupes_found=$((dupes_found + ${#files_in_group[@]} - 1))
         echo ""
@@ -84,9 +83,8 @@ audio_dedup() {
     local dupes_found=0
     echo ""
     for hash in "${!hash_groups[@]}"; do
-        local IFS='|'
-        local files_in_group=(${hash_groups[$hash]})
-        unset IFS
+        local -a files_in_group=()
+        IFS='|' read -r -a files_in_group <<< "${hash_groups[$hash]}"
         [ ${#files_in_group[@]} -lt 2 ] && continue
         dupes_found=$((dupes_found + ${#files_in_group[@]} - 1))
         echo ""
