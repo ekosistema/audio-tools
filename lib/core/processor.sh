@@ -29,7 +29,8 @@ _processor_each_file() {
     [ "$total" -eq 0 ] && { log_warn "No audio files found."; return 0; }
 
     local outdir="${dir:+${dir}/}processed"
-    mkdir -p "$outdir"
+    # --dry-run must not leave an empty output folder behind
+    [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] || mkdir -p "$outdir"
     log_info "Processing $total file(s)..."
     local count=0 errors=0
 
@@ -77,7 +78,7 @@ audio_split_silence() {
     local name="${basename%.*}"
     local ext="${basename##*.}"
     local outdir="${dir}/${name}_split"
-    mkdir -p "$outdir"
+    [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] || mkdir -p "$outdir"
 
     log_info "Detecting silence in $basename..."
 

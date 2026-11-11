@@ -121,23 +121,34 @@ EOF
                 echo "  • $(basename "$file")"
             done
             if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
-                printf '{"command":"search","query":"%s","operation":"list","count":%d}\n' "$query" ${#files[@]}
+                printf '{"command":"search","query":%s,"operation":"list","count":%d}\n' "$(json_string "$query")" "${#files[@]}"
             fi
             ;;
         extract)
             local dest="${output:-${dir}/${query}_extracted}"
-            mkdir -p "$dest"
+            [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] || mkdir -p "$dest"
 
+            # copy_with_rename never overwrites (name_1.wav, name_2.wav...) and honours --dry-run
             local extracted=0
             for file in "${files[@]}"; do
-                cp "$file" "$dest/" 2>/dev/null && ((extracted++)) || true
+                if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
+                    copy_with_rename "$file" "$dest" >/dev/null && extracted=$((extracted + 1)) || true
+                else
+                    copy_with_rename "$file" "$dest" && extracted=$((extracted + 1)) || true
+                fi
             done
 
             if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
-                printf '{"command":"search","query":"%s","operation":"extract","extracted":%d,"output":"%s"}\n' \
-                    "$query" $extracted "$dest"
+                printf '{"command":"search","query":%s,"operation":"extract","dry_run":%s,"extracted":%d,"output":%s}\n' \
+                    "$(json_string "$query")" \
+                    "$([ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] && echo true || echo false)" \
+                    "$extracted" "$(json_string "$dest")"
             elif [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-                log_info "Extracted $extracted file(s) to $dest"
+                if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+                    log_info "[dry run] Would extract $extracted file(s) to $dest"
+                else
+                    log_info "Extracted $extracted file(s) to $dest"
+                fi
             fi
             ;;
         delete)

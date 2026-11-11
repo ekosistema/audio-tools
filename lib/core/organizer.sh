@@ -20,7 +20,8 @@ scan_audios_subfolders() {
         return 1
     fi
 
-    mkdir -p "$dest_folder"
+    # --dry-run must not even create the destination folder
+    [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] || mkdir -p "$dest_folder"
     log_info "Scanning for audio files in $source_folder..."
 
     local all_files=()
@@ -44,7 +45,11 @@ scan_audios_subfolders() {
         update_progress "$(basename "$file")"
     done
 
-    finish_progress "$count" 0 "copied to $dest_folder"
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        finish_progress "$count" 0 "would be copied to $dest_folder (dry run)"
+    else
+        finish_progress "$count" 0 "copied to $dest_folder"
+    fi
 }
 
 # Output: null-delimited matching file paths on stdout

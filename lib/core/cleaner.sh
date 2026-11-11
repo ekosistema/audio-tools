@@ -118,8 +118,12 @@ clean_filenames() {
             if [ -e "$dir/$newname" ]; then
                 update_progress "$filename (skipped)"
             else
-                mv "$file" "$dir/$newname"
-                echo "$filename -> $newname"
+                if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+                    echo "  $filename -> $newname"
+                else
+                    mv "$file" "$dir/$newname"
+                    echo "$filename -> $newname"
+                fi
                 count=$((count + 1))
                 update_progress "$filename → $newname"
             fi
@@ -128,7 +132,11 @@ clean_filenames() {
         fi
     done
 
-    finish_progress "$count" 0 "cleaned $count file(s)"
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        finish_progress "$count" 0 "would clean $count file(s) (dry run)"
+    else
+        finish_progress "$count" 0 "cleaned $count file(s)"
+    fi
 }
 
 # Output: each rename as "old -> new" on stdout
@@ -184,5 +192,9 @@ rename_files() {
         fi
     done
 
-    finish_progress "$count" 0 "renamed $count file(s)"
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        finish_progress "$count" 0 "would rename $count file(s) (dry run)"
+    else
+        finish_progress "$count" 0 "renamed $count file(s)"
+    fi
 }

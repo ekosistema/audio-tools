@@ -44,8 +44,6 @@ convert_to_mp3() {
         output_folder="${source_folder:+${source_folder}/}converted_mp3"
     fi
 
-    mkdir -p "$output_folder"
-
     local files=()
     while IFS= read -r -d '' file; do
         files+=("$file")
@@ -67,6 +65,9 @@ convert_to_mp3() {
         done
         return 0
     fi
+
+    # Created only for a real run: --dry-run must not leave an empty folder behind
+    mkdir -p "$output_folder"
 
     local count=0 errors=0 skipped=0
     init_progress "$total" "Converting to $fmt"

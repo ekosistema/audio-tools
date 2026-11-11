@@ -130,6 +130,10 @@ copy_with_rename() {
         dest="$dest_dir/${name}_${counter}.${extension}"
         counter=$((counter + 1))
     done
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        printf '  %bwould copy:%b %s -> %s\n' "${YELLOW:-}" "${NC:-}" "$src" "$dest"
+        return 0
+    fi
     cp "$src" "$dest"
     echo "Copied: $src -> $dest"
 }
