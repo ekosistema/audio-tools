@@ -1,5 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Audio Tools — Thin entrypoint
+
+# The libraries use Bash 4+ features (associative arrays, declare -g, ${var,,}).
+# macOS ships Bash 3.2 as /bin/bash; fail early with a fix instead of a syntax error.
+if [ -z "${BASH_VERSINFO:-}" ] || [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
+    echo "[FATAL] audio-tools requires Bash 4.0 or newer (found ${BASH_VERSION:-unknown})." >&2
+    echo "        macOS: 'brew install bash' and make sure it is first in your PATH." >&2
+    exit 69
+fi
+
 set -euo pipefail
 IFS=$'\n\t'
 
@@ -52,11 +61,9 @@ source "$LIB_DIR/core/validator.sh"
 
 confirm_or_force() {
     local message="$1"
-    if [ "$AUDIO_TOOLS_FORCE" = "yes" ]; then return 0; fi
+    if [ "${AUDIO_TOOLS_FORCE:-no}" = "yes" ]; then return 0; fi
     log_warn "$message"
-    local response
-    read -r -p "  Are you sure? (yes/no): " response
-    [ "$response" = "yes" ]
+    confirm_prompt "  Are you sure?"
 }
 
 trash_file_list() {
@@ -256,10 +263,8 @@ run_rename() {
 # ── Main ──
 
 main() {
-    # Check dependencies first
-    check_dependencies
-
     # Handle special global flags ONLY if they're the first arg
+    # (before the dependency check, so --help/--version work without ffmpeg)
     case "${1:-}" in
         -h|--help)
             show_help
@@ -270,6 +275,8 @@ main() {
             exit 0
             ;;
     esac
+
+    check_dependencies
 
     # Try new dispatcher first (subcommand style)
     dispatch "$@" && dispatch_status=0 || dispatch_status=$?

@@ -46,7 +46,7 @@
 
 ## Installation
 
-Requires **ffmpeg** and **ffprobe**.
+Requires **ffmpeg** and **ffprobe**, and **Bash 4.0+**. macOS ships Bash 3.2, so run `brew install bash` first (audio-tools uses `#!/usr/bin/env bash` and will pick up the Homebrew one).
 
 ```bash
 git clone https://github.com/ekosistema/audio-tools.git

@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+### Safety
+- **`--dry-run` now really never deletes**: `move_to_trash` is a no-op under dry run (`remove short|long`, `search --operation delete` previously ignored it)
+- **`--quiet` no longer skips delete confirmations** (it used to delete without asking)
+- New `confirm_prompt`: with no input available (closed stdin, CI) destructive commands exit 64 with a hint to use `--force` instead of hanging or guessing
+- Interactive menu exits 64 with a message when stdin is closed
+
+### Fixes
+- Convert, normalize, trim-silence and split-silence preserve the source sample rate and channels (MP3 capped at 48 kHz / 2 ch, AAC at 96 kHz); override with `AUDIO_TOOLS_SAMPLE_RATE` / `AUDIO_TOOLS_CHANNELS`
+- Outputs are written to `<name>.part.<ext>` and renamed on success, so failed runs leave no truncated files; ffmpeg's last error line is shown (full log with `--verbose`); zero-byte leftovers are re-converted
+- JSON output is escaped correctly (file names with quotes/backslashes), no `jq` needed; table JSON rows are arrays; global `--json` now applies to `list`
+- `bc` is no longer required; ffprobe CRLF output (Windows builds) no longer breaks `stats`/`list`
+- `--help`/`--version` work without ffmpeg installed
+- Bash 3.2 (macOS default) is detected with an actionable message; shebang is now `#!/usr/bin/env bash`
+
+### Tooling
+- GitHub Actions CI: shellcheck, bats on Ubuntu and macOS, CLI smoke test
+- `.shellcheckrc`; the codebase is shellcheck-clean
+
 ## 3.0.0 — 2026-05
 
 Major refactor and production-ready release.

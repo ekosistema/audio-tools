@@ -55,7 +55,12 @@ EOF
 run_interactive_menu() {
     while true; do
         show_main_menu
-        read -r -p "Enter your choice: " choice
+        if ! read -r -p "Enter your choice: " choice; then
+            # stdin closed (CI, cron, </dev/null): never loop or exit silently
+            echo ""
+            log_error "No input available for the interactive menu (stdin is closed). Use a subcommand instead, e.g. 'audio-tools --help'."
+            return "$EX_USAGE"
+        fi
 
         case "$choice" in
             1) menu_convert ;;

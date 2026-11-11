@@ -142,10 +142,7 @@ EOF
             ;;
         delete)
             # Confirmation
-            if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-                read -r -p "Delete ${#files[@]} file(s)? (yes/no): " response
-                [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
-            fi
+            confirm_prompt "Delete ${#files[@]} file(s)?" || { log_info "Cancelled"; return 0; }
 
             local deleted=0
             for file in "${files[@]}"; do
@@ -153,9 +150,11 @@ EOF
             done
 
             if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
-                printf '{"command":"search","query":"%s","operation":"delete","deleted":%d}\n' "$query" $deleted
+                printf '{"command":"search","query":%s,"operation":"delete","dry_run":%s,"deleted":%d}\n' \
+                    "$(json_string "$query")" \
+                    "$([ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ] && echo true || echo false)" "$deleted"
             elif [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-                log_info "Deleted $deleted file(s)"
+                log_info "$(delete_verb) $deleted file(s)"
             fi
             ;;
         *)

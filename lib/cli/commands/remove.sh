@@ -111,10 +111,7 @@ _remove_short() {
     fi
 
     # Confirmation
-    if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        read -r -p "Delete ${#files[@]} short files? (yes/no): " response
-        [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
-    fi
+    confirm_prompt "Delete ${#files[@]} short files?" || { log_info "Cancelled"; return 0; }
 
     # Delete files
     local deleted=0
@@ -125,7 +122,7 @@ _remove_short() {
     if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
         printf '{"command":"remove","type":"short","files":%d,"deleted":%d}\n' ${#files[@]} $deleted
     elif [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        log_info "Deleted $deleted short files"
+        log_info "$(delete_verb) $deleted short files"
     fi
 
     return 0
@@ -187,10 +184,7 @@ _remove_long() {
     fi
 
     # Confirmation
-    if [ "$AUDIO_TOOLS_FORCE" != "yes" ] && [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        read -r -p "Delete ${#files[@]} long files? (yes/no): " response
-        [ "$response" = "yes" ] || { log_info "Cancelled"; return 0; }
-    fi
+    confirm_prompt "Delete ${#files[@]} long files?" || { log_info "Cancelled"; return 0; }
 
     # Delete files
     local deleted=0
@@ -201,7 +195,7 @@ _remove_long() {
     if [ "$AUDIO_TOOLS_JSON" = "yes" ]; then
         printf '{"command":"remove","type":"long","files":%d,"deleted":%d}\n' ${#files[@]} $deleted
     elif [ "$AUDIO_TOOLS_QUIET" != "yes" ]; then
-        log_info "Deleted $deleted long files"
+        log_info "$(delete_verb) $deleted long files"
     fi
 
     return 0

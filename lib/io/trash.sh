@@ -2,10 +2,25 @@
 # Funnels all destructive ops through here:
 #   macOS ~/.Trash  →  Linux gio trash  →  trash-put  →  ~/.local/share/Trash/files  →  to_delete/ fallback
 
+# Verb for result messages: honest about dry runs.
+delete_verb() {
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        printf '[dry run] Would delete'
+    else
+        printf 'Deleted'
+    fi
+}
+
 move_to_trash() {
     local file="$1"
     local fallback_root="${2:-.}"
     local to_delete_folder="${fallback_root}/to_delete"
+
+    # Single chokepoint for destructive operations: --dry-run must never move anything.
+    if [ "${AUDIO_TOOLS_DRY_RUN:-no}" = "yes" ]; then
+        printf '  would move to trash: %s\n' "$file"
+        return 0
+    fi
 
     if [[ "$OSTYPE" == "darwin"* ]]; then
         if mv "$file" ~/.Trash/; then
